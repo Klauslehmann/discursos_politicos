@@ -1,11 +1,18 @@
 # Trabajo con discursos políticos
 
-Este repositorio contiene rutinas para descargar:
+### Contenido repositorio
 
-- Discursos parlamentarios
-- Votos de la cámara de diputads
+Este repositorio contiene parte del trabajo realizado en el marco de mi tesis de magíster. 
 
-Además, existen algunas fuciones de análisis para:
+Dentro de la carpeta scripts se encuntran rutinas para descargar:
 
-- Calcular W-NOMINATE
-- Operaciones con word embeddings
+- Discursos parlamentarios de la página del congreso nacional
+- Votos de la cámara de diputados, a partir de la API provista en cámara.cl
+- Biografías parlamentarias de la página del congreso nacional
+
+Además, existen algunas fuciones de análisis para calcular W-NOMINATE
+
+### Trabajo pendiente
+
+- Rutina que para análisis con word embeddings 
+- Archivo rmd con la tesis completa.
