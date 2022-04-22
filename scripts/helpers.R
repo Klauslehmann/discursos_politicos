@@ -324,3 +324,13 @@ create_nominate_input <- function(year, votes_sample = 1) {
   return(result)
 
 }
+
+
+# Volver a descargar archivos que quedaron con problemas
+
+identificar_indices_corruptos <- function(errores) {
+  perdidos <- str_extract_all(errores, "[[:digit:]]+") %>%
+    unlist()
+  which(id_politicos %in% perdidos)
+
+}

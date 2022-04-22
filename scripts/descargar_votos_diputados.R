@@ -7,7 +7,7 @@ library(wnominate)
 library(lubridate)
 
 # El script contiene algunas funciones que permiten trabajar con la API de la cámara de diputados.
-# Trabajo en desarrollo
+# Trabajo en desarrollo.
 
 # Cargar funciones necesarias para hacer las descargas
 source("scripts/helpers.R")

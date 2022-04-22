@@ -2,6 +2,9 @@
 library(rjson)
 library(purrr)
 
+# Cargar funciones necesarias para hacer las descargas
+source("scripts/helpers.R")
+
 # Extraer listado de ids. El archivo listado_politicos.json se descarga manualmente de la página de la biblioteca del congreso. No recuerdo cómo llegué a este solución. El archivo json está en la siguiente url: https://www.bcn.cl/laborparlamentaria/wsgi/consulta/FacetasBuscadorAvanzado.py
 listado <- rjson::fromJSON(file = "data/listado_politicos_actualizado.json")
 politicos <- listado$personas
@@ -16,7 +19,7 @@ identificadores <- data.frame(id_politico = id_politicos, nombre_id = unlist(nom
 
 
 # Descargar los archivos json con la información de los políticos.
-for (id in 581:length(id_politicos)) { #length(id_politicos)
+for (id in 1:length(id_politicos)) { #length(id_politicos)
   url <- paste0("https://www.bcn.cl/laborparlamentaria/wsgi/consulta/FacetasBuscadorAvanzado.py?sort=desc&personas=",
                 id_politicos[id], "&start=0&rows=2000")
   download.file(url = url, destfile = paste0("data/historia_politicos/file", id_politicos[id], ".json") )
@@ -24,14 +27,7 @@ for (id in 581:length(id_politicos)) { #length(id_politicos)
 }
 
 
-# Volver a descargar archivos que quedaron con problemas
 
-identificar_indices_corruptos <- function(errores) {
-  perdidos <- str_extract_all(errores, "[[:digit:]]+") %>%
-    unlist()
-  which(id_politicos %in% perdidos)
-
-}
 
 for (id in identificar_indices_corruptos(e$file)) {
   url <- paste0("https://www.bcn.cl/laborparlamentaria/wsgi/consulta/FacetasBuscadorAvanzado.py?sort=desc&personas=",
