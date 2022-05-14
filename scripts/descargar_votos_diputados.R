@@ -51,6 +51,8 @@ roll_call_data <-  create_vote_data(clean_data, militancia_diputados)
 # W-NOMINATE #
 ##############
 
+
+
 # voto 0 = en contra
 # voto 1 = afirmativo
 # voto 2 = abstención
