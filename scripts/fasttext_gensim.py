@@ -1,6 +1,9 @@
 import sys
 sys.path.append('scripts/')
 
+if 'helpers.pre_process_text' in sys.modules:
+    del sys.modules["helpers.pre_process_text"]
+
 from helpers import pre_process_text
 import numpy as np
 import spacy
@@ -17,16 +20,18 @@ print(size)
 # Crear tabla reducida, para hacer pruebas
 reducida = df[0:10]
 
-# Pre procesar texto. [AQUÍ SE PUEDE PROBAR CON CUALQUIER TEXTO.]
+# Pre procesar texto 
 tokenized =  [pre_process_text(text)  for text in reducida.texto_dep ]
 
+text = reducida.texto_dep[0]
+pre_process_text(text) 
 
+tokenized[1]
 
+len(tokenized[0])
+reducida.texto_dep[1]
 
 # Pasar las palabras por el stemmignde spacy
-# cognitive_vectors_list = [nlp(word).vector for word in df_cognitive]
-# cognitive_vectors_array = np.asarray(cognitive_vectors_list)
-# cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
-# 
-# 
-# print(stopwords.words('spanish'))
+cognitive_vectors_list = [nlp(word).vector for word in df_cognitive]
+cognitive_vectors_array = np.asarray(cognitive_vectors_list)
+cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
