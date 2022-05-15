@@ -1,0 +1,144 @@
+---
+title: "Avance metodológico"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+```{r}
+library(tidyverse)
+library(reticulate)
+library(wordcloud2)
+library(wordcloud)
+```
+
+
+```{r ejecutar_script_python, eval=T}
+source_python("../reportes/gensim_poles.py")
+```
+
+
+
+```{r trar_cosas_de_python}
+start_affective <- py$start_affective
+start_cognitive <- py$start_cognitive 
+
+pos_step_affective <- py$pos_step_affective
+pos_step_cognitive <- py$pos_step_cognitive
+
+stemm_step_affective <- py$stemm_step_affective 
+stemm_step_cognitive <- py$stemm_step_cognitive 
+
+emb_step_affective <- py$emb_step_affective
+emb_step_cognitive <- py$emb_step_cognitive
+ 
+centroid_step_affective <- py$centroid_step_affective
+centroid_step_cognitive <- py$centroid_step_cognitive
+
+
+
+```
+
+## Cambios en el número de palabras 
+
+- paso 1: extraer palabras del diccionario
+- paso 2: seleccionar solo adjectivos, sustantivos y verbos (POS)
+- paso 3: seleccionar los stemming únicos
+- paso 4: remover las palabras que no tienen vector
+- paso 5: remover 25% de palabras más alejadas del centroide
+
+```{r reportar_numeros, eval=T}
+
+data.frame(
+  step = c("start", "pos", "stemming", "embbeding", "centroid"),
+  affective = c(start_affective, pos_step_affective, stemm_step_affective, emb_step_affective, centroid_step_affective ),
+  cognitive = c(start_cognitive, pos_step_cognitive, stemm_step_cognitive, emb_step_cognitive, centroid_step_cognitive )
+
+          )
+
+```
+
+## Importancia de palabras
+
+Se usa el valor de similitud coseno para ponderar las palabras 
+
+### Polo afectivo
+
+```{r}
+df_affective <- py$df_affective
+df_cognitive <- py$df_cognitive
+
+df_affective %>%
+ wordcloud2(size = 0.7)
+
+
+```
+
+### Polo cognitivo
+
+
+
+```{r}
+
+
+#wordcloud(words = df_cognitive$word, freq = df_cognitive$cos,rot.per=0.35 , random.order=T, colors=brewer.pal(8, "Dark2"), max.words = 800)
+
+df_cognitive %>%
+ wordcloud2(size = 0.7)
+
+```
+
+
+## Funcionamiento word embeddings
+
+
+
+```{python}
+def most_similar(word, topn=5):
+  word = nlp.vocab[str(word)]
+  queries = [
+    w for w in word.vocab 
+    if w.is_lower == word.is_lower and np.count_nonzero(w.vector)
+            ]
+  by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
+  return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
+
+
+
+
+# most_similar("adiós", topn=10)
+# most_similar("tristeza", topn=10)
+# most_similar("felicidad", topn=10)
+# most_similar("calma", topn=10)
+# 
+# # Polo cognitivo
+# most_similar("reflexionar", topn=10)
+# most_similar("dirimir", topn=10)
+# most_similar("abstener", topn=10)
+# most_similar("triunfar", topn=10)
+# most_similar("discusión", topn=10)
+
+
+```
+### Polo afectivo
+
+```{python}
+# Polo afectivo
+words = ["adiós", "tristeza", "felicidad", "calma"]
+for word in words:
+  print(word, "--->" , most_similar(word), "\n")
+
+```
+
+
+### Polo cognitivo
+
+```{python}
+# Polo afectivo
+words = ["reflexionar", "dirimir", "abstener", "triunfar", "discusión"]
+for word in words:
+  print(word, "--->" , most_similar(word), "\n")
+```
+

@@ -1,19 +1,6 @@
-# from pysentimiento import create_analyzer
-# analyzer_sent = create_analyzer(task="sentiment", lang="es")
-# analyzer_emo = create_analyzer(task="emotion", lang="es")
-# 
-# def predict_sentiment(text):
-#   prediction = analyzer_sent.predict(text)
-#   return prediction
-#   
-# def predict_emotion(text):
-#   prediction = analyzer_emo.predict(text)
-#   return prediction
-
-
-
-
-
+import gensim 
+from gensim.models import FastText
+from gensim.models.fasttext import load_facebook_model
 import numpy as np
 from numpy import dot
 from numpy.linalg import norm
@@ -23,6 +10,14 @@ import spacy
 nlp = spacy.load('es_core_news_md')
 
 
+
+#wordvectors2 = FastText.load_fasttext_format('data/embeddings-s-model.bin') 
+wordvectors2 = load_facebook_model('data/embeddings-s-model.bin') 
+
+
+##########################
+# GENERAR LAS CATEGORÍAS #
+##########################
 
 # Guardar las categorías en una lista separada
 categorias = []
@@ -55,6 +50,11 @@ categories_dic = dict(zip_iterator)
 
 # Crear un diccionario que contiene las categorias asociadas a cada palabra. Una palabra puede 
 # tener más de una categoría
+
+
+##################
+# TRABAJAR POLOS #
+##################
 
 
 file = open('data/LIWC2001_Spanish.dic', 'r', encoding="latin-1")
@@ -131,7 +131,7 @@ for word in cognitive_words:
 # len(pos_affective)
 # len(pos_cognitive)
 
-# Dejar solo lo que sea sustantivo, adjetivo o verbo. Las listas filtradas guardan el stemming de cada palabra
+# Dejar solo lo que sea sustantivo, adjetivo o verbo
 #print(pos_cognitive[0:10])
 
 filter_affective = [word[1] for word in pos_affective if word[2] == "ADJ" or word[2] == "NOUN" or word[2] == "VERB" ]
@@ -142,55 +142,15 @@ filter_cognitive = [word[1] for word in pos_cognitive if word[2] == "ADJ" or wor
 filter_affective2 = list(dict.fromkeys(filter_affective))
 filter_cognitive2 = list(dict.fromkeys(filter_cognitive))
 
-# len(filter_affective)
-# len(filter_affective2)
 
-# len(filter_cognitive)
-# len(filter_cognitive2)
-
-
-#####################################
-# Probar word embeddings con spacy #
-#####################################
-abandonar = nlp(filter_affective[0])
-abandonais = nlp(filter_affective[1])
-
-# las palabras abandonar y abandonais son casi iguales
-#print(abandonar.similarity(abandonais))
-
-
-
-def most_similar(word, topn=5):
-  word = nlp.vocab[str(word)]
-  queries = [
-    w for w in word.vocab 
-    if w.is_lower == word.is_lower and np.count_nonzero(w.vector)
-            ]
-  by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
-  return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
-
-# Polo afectivo
-most_similar("adiós", topn=10)
-most_similar("tristeza", topn=10)
-most_similar("felicidad", topn=10)
-most_similar("calma", topn=10)
-
-# Polo cognitivo
-most_similar("reflexionar", topn=10)
-most_similar("dirimir", topn=10)
-most_similar("abstener", topn=10)
-most_similar("triunfar", topn=10)
-most_similar("discusión", topn=10)
-
-
-
-#################################################
-# Buscar palabras que estén lejos del centroide #
-#################################################
+##########################
+# Trabajo con embeddings #
+##########################
 
 # Buscar el vector para cada una de las palabras 
-affective_vectors_list = [nlp(word).vector for word in filter_affective2]
-cognitive_vectors_list = [nlp(word).vector for word in filter_cognitive2]
+affective_vectors_list = [wordvectors2.wv[word] for word in filter_affective2]
+cognitive_vectors_list = [wordvectors2.wv[word] for word in filter_cognitive2]
+
 
 # COnstruir un diccionario que una las palabras con dus respectivos vectores
 zip_iterator = zip(filter_affective2, affective_vectors_list)
@@ -203,6 +163,7 @@ word_vector_cognitive = dict(zip_iterator)
 affective_vectors_dic = {word:vector for (word, vector) in word_vector_affective.items() if sum(list(map(lambda x:pow(x,2), vector))) != 0}
 cognitive_vectors_dic = {word:vector for (word, vector) in word_vector_cognitive.items() if sum(list(map(lambda x:pow(x,2), vector))) != 0}
 
+
 # Calcular el centroide del espacio de vectores
 affective_vectors_array = np.asarray([value for value in affective_vectors_dic.values()])
 centroid_affective = np.mean(affective_vectors_array, axis=0)
@@ -212,7 +173,6 @@ centroid_cognitive = np.mean(cognitive_vectors_array, axis=0)
 
 
 # Calcular la distacia coseno
-
 def get_cosine(vector1, vector2):
   result = dot(vector1, vector2)/(norm(vector1)*norm(vector2))
   return(result)
@@ -236,6 +196,7 @@ df_affective_final = df_affective[drop_rows:df_affective.shape[0]]
 drop_rows = round(df_cognitive.shape[0] / 4) 
 df_cognitive_final = df_cognitive[drop_rows:df_cognitive.shape[0]]
 
+
 ################################
 # Recolectar datos del proceso #
 ################################
@@ -255,22 +216,23 @@ emb_step_cognitive = len(cognitive_vectors_dic)
 centroid_step_affective =  len(df_affective_final.index)
 centroid_step_cognitive =  len(df_cognitive_final.index)
 
-
 ###########################################
 # Construir el vector para cada polaridad #
 ###########################################
 
-affective_vectors_list = [nlp(word).vector for word in df_affective_final.word]
+affective_vectors_list = [wordvectors2.wv[word] for word in df_affective.word]
 affective_vectors_array = np.asarray(affective_vectors_list)
 affective_vector = np.mean(affective_vectors_array, axis=0)
 
-cognitive_vectors_list = [nlp(word).vector for word in df_cognitive_final.word]
+cognitive_vectors_list = [wordvectors2.wv[word] for word in df_cognitive]
 cognitive_vectors_array = np.asarray(cognitive_vectors_list)
 cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
 
 
 
 
+# wordvectors2.wv.most_similar_cosmul(positive=['rey','mujer'],negative=['hombre'])
+# wordvectors2.wv.most_similar(positive=['rey','mujer'],negative=['hombre'])
 
 
 

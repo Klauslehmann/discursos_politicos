@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 
+data/embeddings-s-model.bin
+data/embeddings-s-model.bin:Zone.Identifier
+scripts/__pycache__/
