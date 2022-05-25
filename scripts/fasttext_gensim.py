@@ -11,7 +11,7 @@ from helpers import get_centroid
 import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords
-
+# estoy haciendo una modificación desde colab
 # Cargar datos editados
 df =  pd.read_feather("/mnt/c/proyectos_personales/discursos_politicos/data/clean_data/edicion_inicial_light.feather")
 size = df.shape
