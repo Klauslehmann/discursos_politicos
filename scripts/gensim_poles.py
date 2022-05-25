@@ -1,5 +1,4 @@
 import gensim 
-from gensim.models import FastText
 from gensim.models.fasttext import load_facebook_model
 import numpy as np
 from numpy import dot
@@ -7,12 +6,14 @@ from numpy.linalg import norm
 import pandas as pd
 import re
 import spacy
+import pickle
+
 nlp = spacy.load('es_core_news_md')
 
 
 
-#wordvectors2 = FastText.load_fasttext_format('data/embeddings-s-model.bin') 
-wordvectors2 = load_facebook_model('data/embeddings-s-model.bin') 
+#wordvectors = FastText.load_fasttext_format('data/embeddings-s-model.bin') 
+wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
 
 
 ##########################
@@ -148,8 +149,8 @@ filter_cognitive2 = list(dict.fromkeys(filter_cognitive))
 ##########################
 
 # Buscar el vector para cada una de las palabras 
-affective_vectors_list = [wordvectors2.wv[word] for word in filter_affective2]
-cognitive_vectors_list = [wordvectors2.wv[word] for word in filter_cognitive2]
+affective_vectors_list = [wordvectors.wv[word] for word in filter_affective2]
+cognitive_vectors_list = [wordvectors.wv[word] for word in filter_cognitive2]
 
 
 # COnstruir un diccionario que una las palabras con dus respectivos vectores
@@ -216,23 +217,34 @@ emb_step_cognitive = len(cognitive_vectors_dic)
 centroid_step_affective =  len(df_affective_final.index)
 centroid_step_cognitive =  len(df_cognitive_final.index)
 
+
 ###########################################
 # Construir el vector para cada polaridad #
 ###########################################
 
-affective_vectors_list = [wordvectors2.wv[word] for word in df_affective.word]
+affective_vectors_list = [wordvectors.wv[word] for word in df_affective_final.word]
 affective_vectors_array = np.asarray(affective_vectors_list)
 affective_vector = np.mean(affective_vectors_array, axis=0)
 
-cognitive_vectors_list = [wordvectors2.wv[word] for word in df_cognitive]
+cognitive_vectors_list = [wordvectors.wv[word] for word in df_cognitive_final.word]
 cognitive_vectors_array = np.asarray(cognitive_vectors_list)
 cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
 
 
 
+# Guardar vector cognitivo y afectivo
+with open("data/cognitive_vector", "wb") as fp:
+  pickle.dump(cognitive_vector, fp)
 
-# wordvectors2.wv.most_similar_cosmul(positive=['rey','mujer'],negative=['hombre'])
-# wordvectors2.wv.most_similar(positive=['rey','mujer'],negative=['hombre'])
+
+with open("data/affective_vector", "wb") as fp:
+  pickle.dump(affective_vector, fp)
+
+  
+
+
+# wordvectors.wv.most_similar_cosmul(positive=['rey','mujer'],negative=['hombre'])
+# wordvectors.wv.most_similar(positive=['rey','mujer'],negative=['hombre'])
 
 
 

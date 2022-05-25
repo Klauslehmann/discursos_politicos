@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-
+data/
 data/embeddings-s-model.bin
 data/embeddings-s-model.bin:Zone.Identifier
 scripts/__pycache__/git 
