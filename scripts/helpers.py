@@ -20,8 +20,8 @@ def get_centroid(vectors):
 # Función para preprocesar el texto
 def pre_process_text(text, relevant_pos = ["NOUN", "ADJ", "VERB"]):
   
-  text = df.texto_dep[0]
-  relevant_pos = ["NOUN", "ADJ", "VERB"]
+  # text = df.texto_dep[0]
+  # relevant_pos = ["NOUN", "ADJ", "VERB"]
   #Separar cada texto usando los puntos
   
   # Remover puntuación y algunos caracteres molestos
@@ -45,13 +45,12 @@ def pre_process_text(text, relevant_pos = ["NOUN", "ADJ", "VERB"]):
   
   # Después del preprocesamiento quedan frases vacías. Para que todo funcione, es necesario hacer 
   # calzar las frases originales con las editadas
+  
   removed_indices = [counter for counter, elem in enumerate(important_words) if not elem ]
-
   for index in sorted(removed_indices, reverse=True):
     del original_sentences[index]
   
   important_words = [phrase for phrase in important_words if phrase]
-  
   return important_words, original_sentences
 
 

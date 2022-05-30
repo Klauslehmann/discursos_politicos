@@ -240,6 +240,11 @@ with open("data/affective_vector", "wb") as fp:
   pickle.dump(affective_vector, fp)
 
   
+# Guardar listado de palabras del polo afectivo y cognitivo 
+with open("data/df_cognitive_final", "wb") as fp:
+  pickle.dump(df_cognitive_final, fp)
 
+with open("data/df_affective_final", "wb") as fp:
+  pickle.dump(df_affective_final, fp)
 
 

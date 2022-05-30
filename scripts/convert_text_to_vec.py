@@ -1,9 +1,9 @@
 
-del pre_process_text
+#del pre_process_text
 
 import sys
 sys.path.append('scripts/')
-
+import time
 from gensim.models.fasttext import load_facebook_model
 import string
 from helpers import pre_process_text
@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords
 import pickle
+import multiprocessing
+
 
 # Cargar modelo de embeddings
 wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
@@ -23,10 +25,15 @@ size = df.shape
 print(size)
 
 # Pre procesar texto 
-tokenized_text =  [pre_process_text(text)  for text in df.texto_dep[0:10]]
+cpus = multiprocessing.cpu_count()
+pool = multiprocessing.Pool(processes=cpus)
+tokenized_text = pool.map(pre_process_text,df.texto_dep[0:1000])
+
+#tokenized_text =  [pre_process_text(text)  for text in df.texto_dep[0:1000]]
+
 tokenized = list(map(lambda x:x[0], tokenized_text)) 
 original_text = list(map(lambda x:x[1], tokenized_text))
-original_text[0]
+original_text[1]
 
 # Convertir textos procesados en embeddings y luego buscar el centroide
 text_vectors = [[wordvectors.wv[word] for word in sentence ]  for sentence in tokenized]

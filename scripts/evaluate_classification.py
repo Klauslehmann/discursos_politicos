@@ -5,15 +5,19 @@ from collections import Counter
 import pandas as pd
 sys.path.append('scripts/')
 from helpers import get_cosine
-
+import spacy
+nlp = spacy.load('es_core_news_md')
 
 ################
 # CARGAR DATOS #
 ################
 
+# Cargar modelo de embeddings
+wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
+
+
 df =  pd.read_feather("/mnt/c/proyectos_personales/discursos_politicos/data/clean_data/edicion_inicial_light.feather")
 
-list(df.columns)
 # Cargar centroides de las frases
 with open("data/centroids", "rb") as fp:
   centroids = pickle.load(fp)
@@ -32,6 +36,14 @@ with open("data/tokenization", "rb") as fp:
 # Cargar frases originales
 with open("data/original_sentences", "rb") as fp:
   original_text = pickle.load(fp)
+
+# Cargar listados de palabras afectivas y cognitivas
+with open("data/df_affective_final", "rb") as fp:
+  df_affective_final = pickle.load(fp)
+
+with open("data/df_cognitive_final", "rb") as fp:
+  df_cognitive_final = pickle.load(fp)
+
 
 ####################
 # SIMILITUD COSENO #
@@ -75,6 +87,7 @@ len(negativos)
 len(flat_list_tokens)
 len(flat_list_cos)
 len(flat_list_sentences)
+
 # Unir los valores de coseno con los palabras de su correspondiente frase tokenizada
 cos_words = []
 for i in range(0, len(flat_list_tokens)):
@@ -104,4 +117,30 @@ cognitive_words = [item for sublist in cognitive_words for item in sublist]
 word_counts_cognitive = Counter(cognitive_words)
 sorted(word_counts_cognitive.items(), key=lambda item: item[1], reverse=True)[0:50]
 
+############################################
+# Evaluar la clasificación de las palabras #
+#############################################
 
+# Pasar todos los textos por spacy
+texts = df.texto_dep[0:100]
+docs = list(nlp.pipe(texts))
+
+# Crear un vocabulario con las palabras de los textos
+vocab = []
+seen = set()
+for doc in docs:
+  for word in doc:
+    if word.text not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
+      vocab.append(word.lemma_)
+    seen.add(word.text)
+len(vocab)
+
+# Sacar las palabras que ya están dentro del diccionario de cada uno de los polos
+vocab2 =  [word for word in vocab if word not in list(df_affective_final.word) and word not in list(df_cognitive_final.word) ]
+len(vocab2)
+
+# Buscar distancia coseno de cada una de las palabras 
+similarity = []
+for w in vocab2:
+  vector = wordvectors.wv[w]
+  similarity.append([get_cosine(vector, affective_vector), get_cosine(vector, cognitive_vector)]) 
