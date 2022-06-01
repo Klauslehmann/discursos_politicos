@@ -6,6 +6,9 @@ import pandas as pd
 sys.path.append('scripts/')
 from helpers import get_cosine
 import spacy
+from gensim.models.fasttext import load_facebook_model
+import multiprocessing
+
 nlp = spacy.load('es_core_news_md')
 
 ################
@@ -122,25 +125,66 @@ sorted(word_counts_cognitive.items(), key=lambda item: item[1], reverse=True)[0:
 #############################################
 
 # Pasar todos los textos por spacy
-texts = df.texto_dep[0:100]
+texts = df.texto_dep[0:300]
 docs = list(nlp.pipe(texts))
 
-# Crear un vocabulario con las palabras de los textos
 vocab = []
 seen = set()
-for doc in docs:
-  for word in doc:
-    if word.text not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
+for text in texts:
+  spacy = nlp(text)
+  for word in spacy:
+    if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
       vocab.append(word.lemma_)
-    seen.add(word.text)
+    seen.add(word.lemma_)
+
+
+def create(text):
+  vocab = []
+  seen = set()
+  spacy = nlp(text)
+  for word in spacy:
+    if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
+      vocab.append(word.lemma_)
+    seen.add(word.lemma_)
+  return vocab
+
+create(df.texto_dep[0])  
+
+
+cpus = multiprocessing.cpu_count()
+pool = multiprocessing.Pool(processes=cpus)
+vocab = pool.map(create, df.texto_dep[0:2])
+  
+
 len(vocab)
+  
+
+
+# Crear un vocabulario con las palabras de los textos
+# vocab = []
+# seen = set()
+# for doc in docs:
+#   for word in doc:
+#     if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
+#       vocab.append(word.lemma_)
+#     seen.add(word.lemma_)
+# len(vocab)
 
 # Sacar las palabras que ya están dentro del diccionario de cada uno de los polos
 vocab2 =  [word for word in vocab if word not in list(df_affective_final.word) and word not in list(df_cognitive_final.word) ]
 len(vocab2)
 
+
 # Buscar distancia coseno de cada una de las palabras 
-similarity = []
+similarity_affective = []
+similarity_cognitive = []
 for w in vocab2:
   vector = wordvectors.wv[w]
-  similarity.append([get_cosine(vector, affective_vector), get_cosine(vector, cognitive_vector)]) 
+  similarity_affective.append( [w, get_cosine(vector, affective_vector)] )
+  similarity_cognitive.append([w, get_cosine(vector, cognitive_vector)]  )
+
+similarity_cognitive.sort(key=lambda x: x[1], reverse = True)
+similarity_affective.sort(key=lambda x: x[1], reverse = True)
+
+similarity_affective[0:30]
+similarity_cognitive[0:30]
