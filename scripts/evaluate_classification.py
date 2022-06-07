@@ -3,11 +3,20 @@ from numpy.linalg import norm
 import pickle
 from collections import Counter
 import pandas as pd
+import sys
 sys.path.append('scripts/')
 from helpers import get_cosine
+from helpers import remove_unimportant_words
 import spacy
 from gensim.models.fasttext import load_facebook_model
 import multiprocessing
+import itertools
+from functools import partial
+
+
+# Argumentos del script
+m =  sys.argv[1]
+
 
 nlp = spacy.load('es_core_news_md')
 
@@ -16,37 +25,36 @@ nlp = spacy.load('es_core_news_md')
 ################
 
 # Cargar modelo de embeddings
-wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
-
-
-df =  pd.read_feather("/mnt/c/proyectos_personales/discursos_politicos/data/clean_data/edicion_inicial_light.feather")
+wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-s-model.bin') 
 
 # Cargar centroides de las frases
-with open("data/centroids", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/centroids", "rb") as fp:
   centroids = pickle.load(fp)
 
 # Cargar vectores cognitivo y afectivo
-with open("data/cognitive_vector", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/cognitive_vector", "rb") as fp:
   cognitive_vector = pickle.load(fp)
 
-with open("data/affective_vector", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/affective_vector", "rb") as fp:
   affective_vector = pickle.load(fp)
 
 # Cargar frases tokenizadas
-with open("data/tokenization", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/tokenization", "rb") as fp:
   tokenized = pickle.load(fp)
 
 # Cargar frases originales
-with open("data/original_sentences", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/original_sentences", "rb") as fp:
   original_text = pickle.load(fp)
 
 # Cargar listados de palabras afectivas y cognitivas
-with open("data/df_affective_final", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/df_affective_final", "rb") as fp:
   df_affective_final = pickle.load(fp)
 
-with open("data/df_cognitive_final", "rb") as fp:
+with open("/home/klaus/discursos_politicos/data/df_cognitive_final", "rb") as fp:
   df_cognitive_final = pickle.load(fp)
 
+# Cargar datos originales
+df =  pd.read_feather("/home/klaus/discursos_politicos/data/edicion_inicial_light.feather")
 
 ####################
 # SIMILITUD COSENO #
@@ -74,7 +82,7 @@ i = 47
 flat_list_sentences[i]
 flat_list_tokens[i]
 
-# Se agrega un identificador al final de cada frase, para 
+# Se agrega un identificador del texto original al que pertnece cada oración tokenizada 
 flat_list_tokens = []
 id_text = 0
 for sublist in tokenized:
@@ -91,19 +99,18 @@ len(flat_list_tokens)
 len(flat_list_cos)
 len(flat_list_sentences)
 
-# Unir los valores de coseno con los palabras de su correspondiente frase tokenizada
+# Unir los valores de coseno con los palabras de su correspondiente frase tokenizada y frase original
 cos_words = []
 for i in range(0, len(flat_list_tokens)):
-  cos_words.append([flat_list_cos[i], flat_list_tokens[i][0:-1], flat_list_tokens[i][-1] ])
+  cos_words.append([flat_list_cos[i], flat_list_tokens[i][0:-1], flat_list_tokens[i][-1], flat_list_sentences[i] ])
 
 # Ordenmos de menor a mayor (valores pequeños están asociados al polo cognitivo)
 cos_words.sort(key=lambda x: x[0])
 
 # Frases más afectivas y cognitivas con un largo mínimo
 long_phrases = [w for w in cos_words if len(w[1]) > 5]  
-long_phrases[-10:-1]
-long_phrases[0:10]
-
+[x[3] for x in long_phrases[-10:-1] ] 
+[x[3] for x in long_phrases[0:10] ] 
 
 
 # Dejar las quinientas frases más afectivas y contar frecuencia de palabras
@@ -124,58 +131,33 @@ sorted(word_counts_cognitive.items(), key=lambda item: item[1], reverse=True)[0:
 # Evaluar la clasificación de las palabras #
 #############################################
 
-# Pasar todos los textos por spacy
-texts = df.texto_dep[0:300]
-docs = list(nlp.pipe(texts))
+# Generar un subset para probar
+texts = df.texto_dep
+len(texts)
 
-vocab = []
-seen = set()
-for text in texts:
-  spacy = nlp(text)
-  for word in spacy:
-    if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
-      vocab.append(word.lemma_)
-    seen.add(word.lemma_)
-
-
-def create(text):
-  vocab = []
-  seen = set()
-  spacy = nlp(text)
-  for word in spacy:
-    if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
-      vocab.append(word.lemma_)
-    seen.add(word.lemma_)
-  return vocab
-
-create(df.texto_dep[0])  
-
-
+# Eliminar palabras poco interesantes 
 cpus = multiprocessing.cpu_count()
 pool = multiprocessing.Pool(processes=cpus)
-vocab = pool.map(create, df.texto_dep[0:2])
-  
+clean_words = pool.map(partial(remove_unimportant_words, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = m), texts)
+pool.close()
 
-len(vocab)
-  
+# Dejar solo las palabras únicas
+vocab = []
+seen = set()
+for text in clean_words:
+  for word in text:
+    if word not in seen:
+      vocab.append(word)
+    seen.add(word)
 
-
-# Crear un vocabulario con las palabras de los textos
-# vocab = []
-# seen = set()
-# for doc in docs:
-#   for word in doc:
-#     if word.lemma_ not in seen and not word.is_punct and not word.is_digit and not word.is_stop and len(word) > 1:
-#       vocab.append(word.lemma_)
-#     seen.add(word.lemma_)
-# len(vocab)
 
 # Sacar las palabras que ya están dentro del diccionario de cada uno de los polos
 vocab2 =  [word for word in vocab if word not in list(df_affective_final.word) and word not in list(df_cognitive_final.word) ]
+len(vocab)
 len(vocab2)
 
 
-# Buscar distancia coseno de cada una de las palabras 
+# Buscar distancia coseno de cada una de las palabras respecto a los 2 polos
 similarity_affective = []
 similarity_cognitive = []
 for w in vocab2:
@@ -183,8 +165,52 @@ for w in vocab2:
   similarity_affective.append( [w, get_cosine(vector, affective_vector)] )
   similarity_cognitive.append([w, get_cosine(vector, cognitive_vector)]  )
 
+# Mostrar palabras más relevantes de cada polo
 similarity_cognitive.sort(key=lambda x: x[1], reverse = True)
 similarity_affective.sort(key=lambda x: x[1], reverse = True)
 
 similarity_affective[0:30]
 similarity_cognitive[0:30]
+
+
+
+keys_list = [pair[0] for pair in similarity_affective[0:100]]
+values_list = [pair[1] for pair in similarity_affective[0:100]]
+zip_iterator = zip(keys_list, values_list)
+weights = dict(zip_iterator)
+
+# Generate the cloud
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
+wc = WordCloud(width=1600, height=800)
+wordcload_affect = wc.generate_from_frequencies(weights)
+plt.figure(figsize=(100,50) )
+plt.imshow(wordcload_affect, interpolation="bilinear")
+plt.axis("off")
+plt.tight_layout(pad=0)
+plt.show()
+
+plt.savefig('wordcloud.png', facecolor='k', bbox_inches='tight')
+
+
+
+keys_list = [pair[0] for pair in similarity_cognitive[0:100]]
+values_list = [pair[1] for pair in similarity_cognitive[0:100]]
+zip_iterator = zip(keys_list, values_list)
+weights = dict(zip_iterator)
+
+# Generate the cloud
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
+wc = WordCloud(width=1600, height=800)
+wordcload_affect = wc.generate_from_frequencies(weights)
+plt.figure(figsize=(20,10) )
+plt.imshow(wordcload_affect, interpolation="bilinear")
+plt.axis("off")
+plt.tight_layout(pad=0)
+plt.show()
+
+plt.savefig('wordcloud.png', facecolor='k', bbox_inches='tight')
+

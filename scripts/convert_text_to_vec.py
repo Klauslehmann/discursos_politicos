@@ -13,23 +13,24 @@ import pandas as pd
 from nltk.corpus import stopwords
 import pickle
 import multiprocessing
+from functools import partial
 
+# Argumentos del script
+m =  sys.argv[1]
 
 # Cargar modelo de embeddings
-wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
-
+wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-s-model.bin') 
 
 # Cargar datos editados
-df =  pd.read_feather("/mnt/c/proyectos_personales/discursos_politicos/data/clean_data/edicion_inicial_light.feather")
+df =  pd.read_feather("/home/klaus/discursos_politicos/data/edicion_inicial_light.feather")
 size = df.shape
 print(size)
 
 # Pre procesar texto 
 cpus = multiprocessing.cpu_count()
 pool = multiprocessing.Pool(processes=cpus)
-tokenized_text = pool.map(pre_process_text,df.texto_dep[0:1000])
-
-#tokenized_text =  [pre_process_text(text)  for text in df.texto_dep[0:1000]]
+tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = m), df.texto_dep)
+pool.close()
 
 tokenized = list(map(lambda x:x[0], tokenized_text)) 
 original_text = list(map(lambda x:x[1], tokenized_text))
@@ -41,15 +42,15 @@ sentences_centroids = [[get_centroid(sentence) for sentence in text ] for text  
 
 
 # Guardar centroides 
-with open("data/centroids", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/centroids", "wb") as fp:
   pickle.dump(sentences_centroids, fp)
 
 # Guardar tokenización
-with open("data/tokenization", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/tokenization", "wb") as fp:
   pickle.dump(tokenized, fp)
 
 # Guardar textos originales separados en oraciones
-with open("data/original_sentences", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/original_sentences", "wb") as fp:
   pickle.dump(original_text, fp)
 
 

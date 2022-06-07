@@ -7,12 +7,15 @@ import pandas as pd
 import re
 import spacy
 import pickle
+import sys
+from helpers import filter_important_words
 
+# Argumentos del script
+m =  sys.argv[1]
+
+# Insumos
 nlp = spacy.load('es_core_news_md')
-
-
-wordvectors = load_facebook_model('data/embeddings-s-model.bin') 
-
+wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-s-model.bin') 
 
 ##########################
 # GENERAR LAS CATEGORÍAS #
@@ -20,7 +23,7 @@ wordvectors = load_facebook_model('data/embeddings-s-model.bin')
 
 # Guardar las categorías en una lista separada
 categorias = []
-with open('data/LIWC2001_Spanish.dic', 'r', encoding="latin-1") as reader:
+with open('/home/klaus/discursos_politicos/data/LIWC2001_Spanish.dic', 'r', encoding="latin-1") as reader:
     row = 0
     for line in reader.readlines():
       categorias.append(line)
@@ -56,7 +59,7 @@ categories_dic = dict(zip_iterator)
 ##################
 
 
-file = open('data/LIWC2001_Spanish.dic', 'r', encoding="latin-1")
+file = open('/home/klaus/discursos_politicos/data/LIWC2001_Spanish.dic', 'r', encoding="latin-1")
         
 # lines to print
 starting_point = 69  
@@ -113,28 +116,9 @@ cognitive_words = [key  for key, value in words_with_codes.items() if set(cognit
 
 # Dejar solo los adjetivos, sustantivos y verbos, según la metodología del paper 
 
-# Buscar etiqueta pos para cada una de las palabras de la lista affective 
-pos_affective = []
-for word in affective_words:
-  document = nlp(word)
-  for token in document:
-    pos_affective.append((word, token.lemma_, token.pos_)) 
-
-pos_cognitive = []
-for word in cognitive_words:
-  document = nlp(word)
-  for token in document:
-    pos_cognitive.append((word, token.lemma_, token.pos_)) 
-
-    
-# len(pos_affective)
-# len(pos_cognitive)
-
-# Dejar solo lo que sea sustantivo, adjetivo o verbo
-#print(pos_cognitive[0:10])
-
-filter_affective = [word[1] for word in pos_affective if word[2] == "ADJ" or word[2] == "NOUN" or word[2] == "VERB" ]
-filter_cognitive = [word[1] for word in pos_cognitive if word[2] == "ADJ" or word[2] == "NOUN" or word[2] == "VERB" ]
+# Dejar las palabras más relevantes. Se sigue la metodología del paper. Por defecto son los sustantivos, adjetivos y verbos
+filter_cognitive = filter_important_words(cognitive_words, mode = m)
+filter_affective = filter_important_words(affective_words, mode = m)
 
 # Dejar solo las palabras que pasaron por el stemming
 # Esto reduce de manera importante el número de palabras
@@ -150,7 +134,6 @@ filter_cognitive2 = list(dict.fromkeys(filter_cognitive))
 affective_vectors_list = [wordvectors.wv[word] for word in filter_affective2]
 cognitive_vectors_list = [wordvectors.wv[word] for word in filter_cognitive2]
 
-
 # COnstruir un diccionario que una las palabras con dus respectivos vectores
 zip_iterator = zip(filter_affective2, affective_vectors_list)
 word_vector_affective = dict(zip_iterator)
@@ -162,14 +145,12 @@ word_vector_cognitive = dict(zip_iterator)
 affective_vectors_dic = {word:vector for (word, vector) in word_vector_affective.items() if sum(list(map(lambda x:pow(x,2), vector))) != 0}
 cognitive_vectors_dic = {word:vector for (word, vector) in word_vector_cognitive.items() if sum(list(map(lambda x:pow(x,2), vector))) != 0}
 
-
 # Calcular el centroide del espacio de vectores
 affective_vectors_array = np.asarray([value for value in affective_vectors_dic.values()])
 centroid_affective = np.mean(affective_vectors_array, axis=0)
 
 cognitive_vectors_array = np.asarray([value for value in cognitive_vectors_dic.values()])
 centroid_cognitive = np.mean(cognitive_vectors_array, axis=0)
-
 
 # Calcular la distacia coseno
 def get_cosine(vector1, vector2):
@@ -229,22 +210,20 @@ cognitive_vectors_list = [wordvectors.wv[word] for word in df_cognitive_final.wo
 cognitive_vectors_array = np.asarray(cognitive_vectors_list)
 cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
 
-
-
 # Guardar vector cognitivo y afectivo
-with open("data/cognitive_vector", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/cognitive_vector", "wb") as fp:
   pickle.dump(cognitive_vector, fp)
 
 
-with open("data/affective_vector", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/affective_vector", "wb") as fp:
   pickle.dump(affective_vector, fp)
 
   
 # Guardar listado de palabras del polo afectivo y cognitivo 
-with open("data/df_cognitive_final", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/df_cognitive_final", "wb") as fp:
   pickle.dump(df_cognitive_final, fp)
 
-with open("data/df_affective_final", "wb") as fp:
+with open("/home/klaus/discursos_politicos/data/df_affective_final", "wb") as fp:
   pickle.dump(df_affective_final, fp)
 
 

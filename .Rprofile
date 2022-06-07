@@ -1,1 +1,1 @@
-Sys.setenv(RETICULATE_PYTHON = "/home/klehmann/tesis/venv/bin/python")
+Sys.setenv(RETICULATE_PYTHON = "/home/klaus/discursos_politicos/venv/bin/python")
