@@ -17,21 +17,19 @@ from functools import partial
 
 # Argumentos del script
 m =  sys.argv[1]
+m = "word"
 
 # Cargar modelo de embeddings
 wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-s-model.bin') 
 
 # Cargar datos editados
 df =  pd.read_feather("/home/klaus/discursos_politicos/data/edicion_inicial_light.feather")
+df = df[0:50000]
 size = df.shape
 print(size)
 
 # Pre procesar texto 
-cpus = multiprocessing.cpu_count()
-pool = multiprocessing.Pool(processes=cpus)
-tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = m), df.texto_dep)
-pool.close()
-
+tokenized_text = parallel_text_processing(df.texto_dep)
 tokenized = list(map(lambda x:x[0], tokenized_text)) 
 original_text = list(map(lambda x:x[1], tokenized_text))
 original_text[1]

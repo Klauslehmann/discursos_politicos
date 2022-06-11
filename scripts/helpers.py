@@ -5,6 +5,8 @@ import string
 import numpy as np
 from numpy import dot
 from numpy.linalg import norm
+import multiprocessing
+from functools import partial
 
 nlp = spacy.load('es_core_news_md')
 
@@ -100,3 +102,17 @@ def filter_important_words(words_list, mode = "word", relevant_pos = ["NOUN", "A
   elif mode == "lemma":
     filtered_words = [word[1] for word in filtered_words]
   return filtered_words
+
+
+def parallel_text_processing(text_vector, batch_size = 4000):
+  final_list = []
+  pieces = len(text_vector) // batch_size
+  split_text = np.array_split(text_vector, pieces)
+  cpus = multiprocessing.cpu_count()
+  for text in split_text:
+    pool = multiprocessing.Pool(processes=cpus, maxtasksperchild=1000)
+    tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = m), text)
+    pool.close()
+    final_list = final_list + tokenized_text 
+  return final_list
+

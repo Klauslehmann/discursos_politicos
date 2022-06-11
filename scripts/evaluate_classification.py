@@ -12,11 +12,13 @@ from gensim.models.fasttext import load_facebook_model
 import multiprocessing
 import itertools
 from functools import partial
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 
 
 # Argumentos del script
 m =  sys.argv[1]
-
+m = "word"
 
 nlp = spacy.load('es_core_news_md')
 
@@ -79,6 +81,7 @@ flat_list_sentences = []
 for sublist in original_text:
   flat_list_sentences = flat_list_sentences + sublist 
 i = 47
+flat_list_cos[i]
 flat_list_sentences[i]
 flat_list_tokens[i]
 
@@ -150,7 +153,6 @@ for text in clean_words:
       vocab.append(word)
     seen.add(word)
 
-
 # Sacar las palabras que ya están dentro del diccionario de cada uno de los polos
 vocab2 =  [word for word in vocab if word not in list(df_affective_final.word) and word not in list(df_cognitive_final.word) ]
 len(vocab)
@@ -172,7 +174,9 @@ similarity_affective.sort(key=lambda x: x[1], reverse = True)
 similarity_affective[0:30]
 similarity_cognitive[0:30]
 
-
+##################
+# Crear gráficos #
+##################
 
 keys_list = [pair[0] for pair in similarity_affective[0:100]]
 values_list = [pair[1] for pair in similarity_affective[0:100]]
@@ -180,18 +184,14 @@ zip_iterator = zip(keys_list, values_list)
 weights = dict(zip_iterator)
 
 # Generate the cloud
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-
 wc = WordCloud(width=1600, height=800)
 wordcload_affect = wc.generate_from_frequencies(weights)
-plt.figure(figsize=(100,50) )
+plt.figure(figsize=(20,10) )
 plt.imshow(wordcload_affect, interpolation="bilinear")
 plt.axis("off")
 plt.tight_layout(pad=0)
 plt.show()
-
-plt.savefig('wordcloud.png', facecolor='k', bbox_inches='tight')
+plt.savefig('scripts/reportes/wordcloud_affective.png', facecolor='k', bbox_inches='tight')
 
 
 
@@ -212,5 +212,5 @@ plt.axis("off")
 plt.tight_layout(pad=0)
 plt.show()
 
-plt.savefig('wordcloud.png', facecolor='k', bbox_inches='tight')
+plt.savefig('scripts/reportes/wordcloud_cognitive.png', facecolor='k', bbox_inches='tight')
 
