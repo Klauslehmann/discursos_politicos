@@ -7,6 +7,7 @@ from numpy import dot
 from numpy.linalg import norm
 import multiprocessing
 from functools import partial
+from collections import Counter
 
 nlp = spacy.load('es_core_news_md')
 
@@ -104,15 +105,44 @@ def filter_important_words(words_list, mode = "word", relevant_pos = ["NOUN", "A
   return filtered_words
 
 
-def parallel_text_processing(text_vector, batch_size = 4000):
+def parallel_text_processing(text_vector, batch_size = 4000, mode = "word"):
   final_list = []
   pieces = len(text_vector) // batch_size
   split_text = np.array_split(text_vector, pieces)
   cpus = multiprocessing.cpu_count()
   for text in split_text:
-    pool = multiprocessing.Pool(processes=cpus, maxtasksperchild=1000)
-    tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = m), text)
+    pool = multiprocessing.Pool(processes=cpus, maxtasksperchild=800)
+    tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = mode), text)
     pool.close()
     final_list = final_list + tokenized_text 
   return final_list
+
+def flatten(xss):
+    return [x for xs in xss for x in xs]
+
+
+def convert_to_vec(model, token_phrases, mode = "sentence"):
+  text_vectors = [[model.wv[word] for word in sentence ]  for sentence in token_phrases]
+  if mode == "sentence":
+    sentences_centroids = [[get_centroid(sentence) for sentence in text ] for text  in text_vectors]
+  elif mode == "text":
+    sentences_centroids = [get_centroid(flatten(text)) for text  in text_vectors]
+  return sentences_centroids
+
+def get_words_ranking(data, n_phrases = 1000, n_words = 30,  pole = "affective"):
+  # data = cos_words
+  # pole = "affective"
+  # n_phrases = 1000
+  # n_words = 50
+  if pole == "affective":
+    data.sort(key=lambda x: x[0], reverse=True)
+  elif pole == "cognitive":
+    data.sort(key=lambda x: x[0])
+
+  affect_phrases =  data[0:n_phrases]
+  affect_words = [x[1] for x in affect_phrases ]
+  affect_words = [item for sublist in affect_words for item in sublist]
+  word_counts_affect = Counter(affect_words)
+  return   sorted(word_counts_affect.items(), key=lambda item: item[1], reverse=True)[0:n_words]
+
 

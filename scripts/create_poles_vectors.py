@@ -1,3 +1,4 @@
+sys.path.append('scripts/')
 import gensim 
 from gensim.models.fasttext import load_facebook_model
 import numpy as np
@@ -12,10 +13,10 @@ from helpers import filter_important_words
 
 # Argumentos del script
 m =  sys.argv[1]
-
+m = "word"
 # Insumos
 nlp = spacy.load('es_core_news_md')
-wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-s-model.bin') 
+wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-m-model.bin') 
 
 ##########################
 # GENERAR LAS CATEGORÍAS #
@@ -170,11 +171,11 @@ df_affective = df_affective.sort_values(by=['cos'])
 df_cognitive = pd.DataFrame(data_cognitive)
 df_cognitive = df_cognitive.sort_values(by=['cos'])
 
-# Eliminar el 25% de las palabras que están más alejadas del centroide de cada uno de los polos
-drop_rows = round(df_affective.shape[0] / 4) 
+# Eliminar la mitad de las palabras que están más alejadas del centroide de cada uno de los polos
+drop_rows = round(df_affective.shape[0] / 1.2) 
 df_affective_final = df_affective[drop_rows:df_affective.shape[0]]
 
-drop_rows = round(df_cognitive.shape[0] / 4) 
+drop_rows = round(df_cognitive.shape[0] / 1.2) 
 df_cognitive_final = df_cognitive[drop_rows:df_cognitive.shape[0]]
 
 
@@ -197,6 +198,17 @@ emb_step_cognitive = len(cognitive_vectors_dic)
 centroid_step_affective =  len(df_affective_final.index)
 centroid_step_cognitive =  len(df_cognitive_final.index)
 
+#############################################
+# Eliminar algunas palabras de los listados #
+#############################################
+list(df_affective_final.word)
+list(df_cognitive_final.word)
+
+drop_cognitive = ["perdona", "testarud"]
+drop_affective = ["realidad"]
+
+df_cognitive_final = df_cognitive_final[df_cognitive_final["word"].str.contains(*drop_cognitive) == False ]
+df_affective_final = df_affective_final[df_affective_final["word"] != "realidad"]
 
 ###########################################
 # Construir el vector para cada polaridad #
@@ -209,6 +221,26 @@ affective_vector = np.mean(affective_vectors_array, axis=0)
 cognitive_vectors_list = [wordvectors.wv[word] for word in df_cognitive_final.word]
 cognitive_vectors_array = np.asarray(cognitive_vectors_list)
 cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
+
+#################################
+# Explorar listado de palabras #
+#################################
+
+# Chequear cuántas palabras están repetidas en los 2 polos
+repeated = [cog for cog in df_cognitive_final.word if cog in list(df_affective_final.word) ]
+len(repeated)
+
+get_cosine(cognitive_vector, affective_vector)
+
+
+df_affective_final.sort_values(by='cos', ascending=False)
+df_cognitive_final.sort_values(by='cos', ascending=False)
+
+
+###################
+# Guardar objetos #
+###################
+
 
 # Guardar vector cognitivo y afectivo
 with open("/home/klaus/discursos_politicos/data/cognitive_vector", "wb") as fp:
