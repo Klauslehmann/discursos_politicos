@@ -8,8 +8,21 @@ from numpy.linalg import norm
 import multiprocessing
 from functools import partial
 from collections import Counter
+from spacy.language import Language
+import pickle
 
 nlp = spacy.load('es_core_news_md')
+
+
+# Agregar una regla que separa usando el caracter \\n
+@Language.component("set_custom_boundaries")
+def set_custom_boundaries(doc): 
+    for token in doc[:-1]: 
+        if token.text == "\\n": 
+            doc[token.i + 1].is_sent_start = True
+    return doc
+nlp.add_pipe("set_custom_boundaries", first=True)
+
 
 
 # Función que calcula el centroide de un conjunto de vectores
@@ -21,30 +34,43 @@ def get_centroid(vectors):
 
 
 # Función para preprocesar el texto
-def pre_process_text(text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = "word"):
+def pre_process_text(text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = "word", paragraph = False):
   
-  # text = df.texto_dep[0]
-  # relevant_pos = ["NOUN", "ADJ", "VERB"]
-  #Separar cada texto usando los puntos
+# =============================================================================
+#   text= df.texto_dep[0]
+#   relevant_pos = ["NOUN", "ADJ", "VERB"] # Separar cada texto usando los puntos
+#   mode = "word"
+#   paragraph = True
+# =============================================================================
   
-  # Remover puntuación y algunos caracteres molestos
-  punctuation = re.sub(r'\\|\.', '', string.punctuation)
-  text_dep = text.translate(str.maketrans('', '', punctuation))
-  text_dep = re.sub(r'\\n','', text_dep).strip() 
-  text_dep = re.sub(r'\t',' ', text_dep) 
-  
-  # Pasar por NLP
+  if paragraph == True:
+      # Remover puntuación y algunos caracteres molestos
+      punctuation = re.sub(r'\\|', '', string.punctuation)
+      text_dep = text.translate(str.maketrans('', '', punctuation))
+      text_dep = re.sub(r'\t',' ', text_dep) 
+      text_dep= text_dep.replace('\\n', ' \\n ')      
+      
+  else: 
+      # Remover puntuación y algunos caracteres molestos
+      punctuation = re.sub(r'\\|\.', '', string.punctuation)
+      text_dep = text.translate(str.maketrans('', '', punctuation))
+      text_dep = re.sub(r'\\n','', text_dep).strip() 
+      text_dep = re.sub(r'\t',' ', text_dep) 
+      
+      
+
   nlp_text = nlp(text_dep)
-  
+  #print("After:", [sent.text for sent in   nlp_text .sents])
+
   # Dejar solo las palabras importantes 
   if mode == "word":
     important_words = [
-      [token.text for token in phrase if token.pos_ in relevant_pos and len(token.text) > 1] 
+      [token.text for token in phrase if token.pos_ in relevant_pos and len(token.text) > 1 and token.text != "\\n" ] 
       for phrase in nlp_text.sents
   ]
   elif mode == "lemma":
     important_words = [
-      [token.lemma_ for token in phrase if token.pos_ in relevant_pos and len(token.lemma_) > 1] 
+      [token.lemma_ for token in phrase if token.pos_ in relevant_pos and len(token.lemma_) > 1 and token.text != "\\n"] 
       for phrase in nlp_text.sents
   ]
   else:
@@ -55,8 +81,7 @@ def pre_process_text(text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = "word"
   original_sentences = list(map(lambda z:z.text, original_sentences))
   
   # Después del preprocesamiento quedan frases vacías. Para que todo funcione, es necesario hacer 
-  # calzar las frases originales con las editadas
-  
+  # calzar las frases originales con las editadas  
   removed_indices = [counter for counter, elem in enumerate(important_words) if not elem ]
   for index in sorted(removed_indices, reverse=True):
     del original_sentences[index]
@@ -105,16 +130,22 @@ def filter_important_words(words_list, mode = "word", relevant_pos = ["NOUN", "A
   return filtered_words
 
 
-def parallel_text_processing(text_vector, batch_size = 4000, mode = "word"):
+def parallel_text_processing(text_vector, batch_size = 4000, mode = "word", paragraph = False):
+# =============================================================================
+#   text_vector = df.texto_dep
+#   batch_size = 5000
+#   mode = "word"
+#   paragraph = False
+# =============================================================================
   final_list = []
   pieces = len(text_vector) // batch_size
   split_text = np.array_split(text_vector, pieces)
   cpus = multiprocessing.cpu_count()
+  pool = multiprocessing.Pool(processes=cpus)
   for text in split_text:
-    pool = multiprocessing.Pool(processes=cpus, maxtasksperchild=800)
-    tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = mode), text)
-    pool.close()
-    final_list = final_list + tokenized_text 
+    tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = mode, paragraph = paragraph), text)
+    final_list.extend(tokenized_text) 
+  pool.close()
   return final_list
 
 def flatten(xss):
@@ -145,4 +176,30 @@ def get_words_ranking(data, n_phrases = 1000, n_words = 30,  pole = "affective")
   word_counts_affect = Counter(affect_words)
   return   sorted(word_counts_affect.items(), key=lambda item: item[1], reverse=True)[0:n_words]
 
+def save_list(file_name, partition, list_object):
+    file_name = "{file_name}{parte}".format(file_name = file_name, parte = partition)
+    with open(file_name , "wb") as fp:
+      pickle.dump(list_object, fp)
 
+def remove_rows(df, percentage):
+    starting_row =  round(df.shape[0] * percentage)
+    df_final = df[starting_row :df.shape[0]]
+    return df_final
+
+def create_pole(df_final, wv):
+    vectors_list = [wv.wv[word] for word in df_final.word]
+    vectors_array = np.asarray(vectors_list)
+    vector = np.mean(vectors_array, axis=0)
+    return vector 
+
+def get_cos_percentage(percentage, df1, df2, wv):
+    # Eliminar la mitad de las palabras que están más alejadas del centroide de cada uno de los polos
+    df_affective_final = remove_rows(df1, percentage)
+    df_cognitive_final = remove_rows(df2, percentage)
+
+    affective_vector = create_pole(df_affective_final, wv)    
+    cognitive_vector = create_pole(df_cognitive_final, wv)
+
+    cos = get_cosine(cognitive_vector, affective_vector)
+
+    return [cos, percentage, df_cognitive_final.shape[0], df_affective_final.shape[0]  ]

@@ -3,59 +3,65 @@
 
 import sys
 sys.path.append('scripts/')
-import time
 from gensim.models.fasttext import load_facebook_model
-import string
 from helpers import pre_process_text
-from helpers import parallel_text_processing
-from helpers import get_centroid
 from helpers import convert_to_vec
-from helpers import flatten
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords
-import pickle
-import multiprocessing
-from functools import partial
+from helpers import save_list
+import time
+import copy
 
 # Argumentos del script
-m =  sys.argv[1]
+#m =  sys.argv[1]
 m = "word"
 
 # Cargar datos editados
-df =  pd.read_feather("/home/klaus/discursos_politicos/data/edicion_inicial_light.feather")
-
-# Pre procesar texto 
-tokenized_text = parallel_text_processing(df.texto_dep, batch_size = 5000,  mode = m)
-tokenized = list(map(lambda x:x[0], tokenized_text)) 
-original_text = list(map(lambda x:x[1], tokenized_text))
+df =  pd.read_feather("/home/klaus/discursos_politicos/data/edicion_inicial.feather")
 
 # Cargar modelo de embeddings
 wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-m-model.bin') 
 
-# Convertir textos procesados en embeddings y luego buscar el centroide
-sentences_centroids_text = convert_to_vec(wordvectors, tokenized, mode = "text")  
-sentences_centroids_sentence = convert_to_vec(wordvectors, tokenized, mode = "sentence")  
 
-# Guardar centroides 
-with open("/home/klaus/discursos_politicos/data/centroids_text", "wb") as fp:
-  pickle.dump(sentences_centroids_text, fp)
 
-with open("/home/klaus/discursos_politicos/data/centroids_sentence", "wb") as fp:
-  pickle.dump(sentences_centroids_sentence, fp)
+# Dividir texto en varias partes
+text_vector = copy.copy(df.texto_dep)
+split_text = np.array_split(text_vector, 10)
 
-# Guardar tokenización
-with open("/home/klaus/discursos_politicos/data/tokenization", "wb") as fp:
-  pickle.dump(tokenized, fp)
+#corrió hasta la partición 6
 
-# Guardar textos originales separados en oraciones
-with open("/home/klaus/discursos_politicos/data/original_sentences", "wb") as fp:
-  pickle.dump(original_text, fp)
+# Procesar texto y guardar cada parte por separado, para no colapsar la memoria
+particion = 1
+start_time = time.time()
+for fraction in split_text:
+    #pool = multiprocessing.Pool(processes=cpus)
+    #tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = "word", paragraph = True), fraction )
+    tokenized_text = [pre_process_text(t, paragraph=True) for t in fraction]
+    tokenized = list(map(lambda x:x[0], tokenized_text)) 
+    original_text = list(map(lambda x:x[1], tokenized_text))
 
-del sentences_centroids_text
-del sentences_centroids_sentence
-del wordvectors 
-del tokenized
-del original_text
-del tokenized_text
-del df
+    # Convertir cada palabra en un embeddings y luego promediar las palabras de cada párrafo
+    sentences_centroids_sentence = convert_to_vec(wordvectors, tokenized, mode = "sentence")  
+
+    save_list("/home/klaus/discursos_politicos/data/original_sentences_parte", particion, original_text)
+    save_list("/home/klaus/discursos_politicos/data/tokenization_parte", particion, tokenized)
+    save_list("/home/klaus/discursos_politicos/data/centroids_sentence_parte", particion, sentences_centroids_sentence)
+    del tokenized_text, tokenized, original_text 
+    #pool.close()
+    print("parte", particion)
+    particion += 1
+
+    
+print("--- %s seconds ---" % (time.time() - start_time))
+
+
+
+
+###################
+# LIMPIAR MEMORIA #
+###################
+
+from IPython import get_ipython
+get_ipython().magic('reset -sf')
+
+

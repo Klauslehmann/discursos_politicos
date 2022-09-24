@@ -1,0 +1,12 @@
+[workspace]
+restore_data_on_startup = True
+save_data_on_exit = True
+save_history = True
+save_non_project_files = False
+project_type = 'empty-project-type'
+recent_files = ['scripts/data_description.py', 'scripts/create_dataframe.py', 'scripts/convert_text_to_vec.py', 'scripts/create_poles_vectors.py', 'scripts/helpers.py', 'tesis/scripts_helpers_tesis/ejemplo_preprocesamiento.py', 'tesis/scripts_helpers_tesis/descripcion_intervenciones.py']
+
+[main]
+version = 0.2.0
+recent_files = []
+

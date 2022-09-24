@@ -1,5 +1,5 @@
+import sys
 sys.path.append('scripts/')
-import gensim 
 from gensim.models.fasttext import load_facebook_model
 import numpy as np
 from numpy import dot
@@ -10,9 +10,13 @@ import spacy
 import pickle
 import sys
 from helpers import filter_important_words
+from helpers import create_pole
+from helpers import remove_rows
+from helpers import get_cos_percentage
+
 
 # Argumentos del script
-m =  sys.argv[1]
+#m =  sys.argv[1]
 m = "word"
 # Insumos
 nlp = spacy.load('es_core_news_md')
@@ -49,10 +53,6 @@ clean_categories2 = [re.sub(r'[0-9]','', s) for s in clean_categories]
 zip_iterator = zip(clean_categories2, codes)
 categories_dic = dict(zip_iterator)
 
-#print(categories_dic)
-
-# Crear un diccionario que contiene las categorias asociadas a cada palabra. Una palabra puede 
-# tener más de una categoría
 
 
 ##################
@@ -171,12 +171,17 @@ df_affective = df_affective.sort_values(by=['cos'])
 df_cognitive = pd.DataFrame(data_cognitive)
 df_cognitive = df_cognitive.sort_values(by=['cos'])
 
-# Eliminar la mitad de las palabras que están más alejadas del centroide de cada uno de los polos
-drop_rows = round(df_affective.shape[0] / 1.2) 
-df_affective_final = df_affective[drop_rows:df_affective.shape[0]]
+#######################################################
+# Eliminar palabras, según su cercanía con el centroide
+#######################################################
 
-drop_rows = round(df_cognitive.shape[0] / 1.2) 
-df_cognitive_final = df_cognitive[drop_rows:df_cognitive.shape[0]]
+# Relación entre porcentaje de palabras eliminadas y correlación 
+valores = [i / 10 for i in range(1,10)]
+correlacion_polos =  [get_cos_percentage(x, df_affective, df_cognitive, wordvectors) for x in valores ]
+
+# Eliminar  las palabras que están más alejadas del centroide de cada uno de los polos
+df_affective_final = remove_rows(df_affective, 0.8)
+df_cognitive_final = remove_rows(df_cognitive, 0.8)
 
 
 ################################
@@ -189,38 +194,41 @@ start_cognitive = len(cognitive_words)
 pos_step_affective =  len(filter_affective)
 pos_step_cognitive = len(filter_cognitive)
 
-stemm_step_affective =  len(filter_affective2)
-stemm_step_cognitive = len(filter_cognitive2)
-
-emb_step_affective = len(affective_vectors_dic)
-emb_step_cognitive = len(cognitive_vectors_dic)
-
 centroid_step_affective =  len(df_affective_final.index)
 centroid_step_cognitive =  len(df_cognitive_final.index)
+
+process_info =  pd.DataFrame({
+    "polo": ["afectivo", "cognitivo"],
+    "inicial": [start_affective , start_cognitive ],
+    "pos": [pos_step_affective ,  pos_step_cognitive  ],
+    "centroide": [centroid_step_affective,  centroid_step_cognitive ]
+              }) 
+
+process_info.to_csv("tesis/cuadros_tesis/filtrado_polos.csv")
+df_cognitive_final.to_csv("tesis/cuadros_tesis/df_cognitive_final.csv")
+df_affective_final.to_csv("tesis/cuadros_tesis/df_affective_final.csv")
+
 
 #############################################
 # Eliminar algunas palabras de los listados #
 #############################################
-list(df_affective_final.word)
-list(df_cognitive_final.word)
+#list(df_affective_final.word)
+#list(df_cognitive_final.word)
 
-drop_cognitive = ["perdona", "testarud"]
-drop_affective = ["realidad"]
+#drop_cognitive = ["perdona", "testarud"]
+#drop_affective = ["realidad"]
 
-df_cognitive_final = df_cognitive_final[df_cognitive_final["word"].str.contains(*drop_cognitive) == False ]
-df_affective_final = df_affective_final[df_affective_final["word"] != "realidad"]
+#df_cognitive_final = df_cognitive_final[df_cognitive_final["word"].str.contains(*drop_cognitive) == False ]
+#df_affective_final = df_affective_final[df_affective_final["word"] != "realidad"]
 
 ###########################################
 # Construir el vector para cada polaridad #
 ###########################################
 
-affective_vectors_list = [wordvectors.wv[word] for word in df_affective_final.word]
-affective_vectors_array = np.asarray(affective_vectors_list)
-affective_vector = np.mean(affective_vectors_array, axis=0)
+affective_vector = create_pole(df_affective_final, wordvectors)    
+cognitive_vector = create_pole(df_cognitive_final, wordvectors)
 
-cognitive_vectors_list = [wordvectors.wv[word] for word in df_cognitive_final.word]
-cognitive_vectors_array = np.asarray(cognitive_vectors_list)
-cognitive_vector = np.mean(cognitive_vectors_array, axis=0)
+
 
 #################################
 # Explorar listado de palabras #

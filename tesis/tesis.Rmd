@@ -1,0 +1,515 @@
+---
+output:
+  pdf_document:
+    #latex_engine: xelatex
+    number_sections: true
+    fig_caption: true
+    keep_tex: yes
+lang: "es-CO"
+fontsize: 12pt
+#mainfont: Georgia
+bibliography: references.bib
+#csl: apa.csl 
+header-includes:
+  - \usepackage{dcolumn}
+  - \usepackage{rotating}
+  - \usepackage{xcolor}
+  - \usepackage[bottom]{footmisc}
+  - \usepackage{setspace}
+  - \usepackage{multirow}
+  - \usepackage{footnote}
+  - \usepackage{caption}
+  - \usepackage{subcaption}
+  - \usepackage[font=small,labelfont=it,margin=\parindent,tableposition=top]{caption}
+
+  
+  
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, eval = T, message = F)
+library(tidyverse)
+library(feather)
+library(kableExtra)
+library(patchwork)
+options(scipen = "999")
+source("scripts_helpers_tesis/funciones.R", encoding = "utf-8")
+
+```
+
+<!-- tabla contenidos -->
+\newpage
+\begin{spacing}{0.9} 
+\tableofcontents
+\end{spacing} 
+
+\newpage
+
+<!-- Lista de tablas -->
+\begin{spacing}{0.9} 
+\listoftables
+\end{spacing} 
+
+<!-- Lista de figuras -->
+\newpage
+\listoffigures
+\newpage
+\normalsize
+
+# Introducción
+
+# Literatura sobre emotividad y polarización
+
+# Fuentes de información y preprocesamiento 
+Esta sección describe las principales características del dataset utilizado y los procedimientos realizados durante el pre procesamiento de la información. El dataset construido proviene de tres fuentes de información: 1) textos parlamentarios emitidos desde 1965 a 2022; 2) biografías parlamentarias y 3) votaciones dentro de la cámara de diputados desde 2002 a 2022.  
+
+
+```{r descripcion_datos}
+intervenciones_anio <-  read_feather("cuadros_tesis/intervenciones_anio.feather")
+cantidad_filas <-  read_feather("cuadros_tesis/cantidad_filas.feather")
+
+# Poner puntos
+cantidad_filas_formato <- cantidad_filas %>% 
+  mutate(`cantidad de filas` = format(`cantidad de filas`, big.mark=".",  decimal.mark = ",", scientific=FALSE))
+
+
+# Intervenciones originales
+original_rows <-  cantidad_filas_formato %>% 
+  filter(filtro == "datos brutos") %>% 
+  pull()
+
+# Intervenciones luego del filtro
+filtered_rows <-  cantidad_filas_formato %>% 
+  filter(filtro == "datos filtrados") %>% 
+  pull()
+
+
+```
+
+## Textos parlamentarios biblioteca del congreso nacional 
+
+Los textos parlamentarios corresponden a todas las transcripciones de intervenciones parlamentarias realizadas en ambas cámaras desde el año 1965 hasta 2022. Debido a que no existe un set de datos ordenados de los discursos parlamentarios, disponible para su descarga, la información fue obtenida del sitio web de la Biblioteca del Congreso Nacional por medio de técnicas de *webscraping* \footnote{En concreto, se desarrolló un código en R y por medio de una tecnología llamada Selenium se simuló un usuario que navegó a través de todos los discursos parlamentarios durante varias horas.}. De esta manera, fueron obtenidas las transcripciones íntegras, junto a algunos metadatos disponibles, como el título de la intervención, fecha y autores de la misma.  
+
+La recolección de información tuvo como resultado un total de `r original_rows` intervenciones parlamentarias  (tabla \ref{tab:tabla_pre_post_filtro}), tanto individuales como grupales. Luego de una edición y selección de intervenciones relevantes, el dataset final quedó conformado por `r filtered_rows` textos. Existen dos motivos que explican la reducción en la cantidad de registros. En primer lugar, se seleccionaron aquellas intervenciones en las que participa un solo parlamentario, de modo de asociar claramente un discurso a una persona \footnote{Es común que una misma intervención esté firmada por dos o más parlamentarios}. El segundo motivo, guarda relación con la remoción de ciertas categorías de intervenciones parlamentarias que no son de interés para el presente estudio. Existen 52 categorías de participaciones parlamentarias, muchas de las cuales corresponden a asuntos administrativos o tienen un lenguaje con un fuerte sesgo técnico-jurídico. Dichas intervenciones fueron removidas, puesto que no están asociados al objetivo de este trabajo \footnote{Para más detalle sobre las categorías de participaciones parlamentarias ver Anexo} 
+
+
+```{r tabla_pre_post_filtro}
+
+# Tabla cantidad filas antes y después del filtro
+tabla_n_filas <- cantidad_filas_formato %>% 
+  kbl(format = "latex", booktabs = T, caption = "Total de intervenciones parlamentarias") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position",)
+tabla_n_filas
+```
+
+
+Tal como muestra la figura \ref{n_year}, existe una ventana de 17 años en la que no se cuenta con información debido al cierre del Congreso Nacional durante la dictadura \footnote{No se muestran los datos de 2022 en el gráfico debido al bajo número de intervenciones existen en el momento de la recolección de información. Esta fue realizada durante marzo de 2022, de modo que a dicha fecha solo se registra una pequeña fracción de las intervenciones que usualmente se llevan a cabo durante un año legislativo}.   
+
+
+
+```{r intervenciones_anio }
+plot <-  intervenciones_anio %>% 
+  filter(anio < 2022) %>% 
+  ggplot(aes(anio, n, color = "coral"), group = 1) +
+  geom_line() +
+  geom_vline(xintercept = 1973, linetype="dotted") +
+  geom_vline(xintercept = 1990, linetype="dotted") +
+  theme_bw() +
+  labs(y = "número intervenciones", 
+       x = "año",
+       caption = "Nota: se excluyen los datos de 2022"
+       ) +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0)
+        )
+
+ggsave(plot = plot, filename = "cuadros_tesis/plot_n_year.png")
+
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Número de intervenciones parlamentarias por año}
+\label{n_year}
+\includegraphics[width = 0.5 \textwidth]{cuadros_tesis/plot_n_year.png}
+\normalsize
+\end{figure}
+
+Con el objeto de convertir los discursos parlamentarios en información estadísticamente relevante, fue necesario llevar a cabo un preprocesamiento de los datos. En primer lugar, se convirtieron todos los textos en minúscula, lo cual facilita una serie de tareas del procesamiento y reduce el número de palabras únicas. En segundo lugar, se removieron algunos extractos de los textos poco informativos, como los vocativos u otros encabezados similares \footnote{Una gran cantidad de discursos comienza con el vocativo *señor presidente* o *señora presidenta*. Otro caso muy común ocurre cuando el presidente o presidenta de la cámara entrega la palabra, en cuyo caso suele utilizarse la fórmula *el/la diputado/a [nombre] tiene la palabra*}.   
+
+En tercer lugar, se dividieron los discursos en párrafos \footnote{El separador utilizado fue el interlineado}, los cuales constituyen la unidad de análisis que da lugar a los resultados de este trabajo. Una vez separados en párrafos, los textos fueron *tokenizados* en palabras. Esto significa que cada intervención fue dividida en párrafos y, a su vez, cada párrafo fue dividido en palabras, las cuales corresponden a la unidad más desagregada posible.  
+
+En cuarto lugar, se removieron los signos de puntuación y las palabras que en la terminología de NLP se denominan *stopwords*. Estas palabras se caracterizan por ser muy comunes, pues al corresponder a una parte estructural de los idiomas, se utilizan en prácticamente todos los contextos, por ende, para muchas tareas de clasificación de textos no aportan información relevante. Por lo general, las librerías utilizadas para NLP contienen listados de *stopwords*, que típicamente contienen conjunciones, preposiciones, algunos adverbios y otras partículas.      
+
+Finalmente, se seleccionan los sustantivos, adjetivos y verbos mediante un modelo de *spacy*\footnote{Spacy es una librería de Python ampliamente utilizada para facilitar tareas relacionadas con el procesamiento de lenguaje natural. Spacy contiene modelos para hacer POS, *name entity recognition*, mapeo de palabras a vectores, entre otras herramientas} entrenado para hacer POS (*Part of speech*). Mediante esta operación se busca retener aquellas palabras que aportan más significado al contenido de los discursos parlamentarios, lo cual, además, disminuye el tiempo de computación, ya que se elimina una parte importante de las palabras del corpus.  
+
+El cuadro \ref{tab:ejemplo_preprocesamiento} muestra un ejemplo de la situación inicial y final de un extracto de una de las intervenciones parlamentarias. Es posible observar lo siguiente: 1) el texto final está en minúscula, 2) no existen signos de puntuación, 3) varias palabras han sido removidas y 4) el párrafo original está contenido en una lista de palabras.  
+
+```{r ejemplo_preprocesamiento}
+preprocesamiento <-  read_csv("cuadros_tesis/ejemplo_preprocesamiento.csv")
+
+preprocesamiento_tabla <- preprocesamiento %>% 
+  select(original, final) %>% 
+  kbl(format = "latex", booktabs = T, caption = "Ejemplo de preprocesamiento") %>% 
+  column_spec(1:2, width = "15em", bold = TRUE, italic = TRUE) %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position")
+preprocesamiento_tabla
+
+```
+
+```{r preparacion_descripcion_dataset}
+dataset_stats = read_csv("cuadros_tesis/datasets_stats.csv")
+
+dataset_stats2 = dataset_stats %>% 
+  mutate_all(round, 2) %>% 
+  mutate_all(~format(., big.mark = ".", decimal.mark = ",", scientific = FALSE)) 
+
+names(dataset_stats2) <- c("total intervenciones", "total párrafos", "total palabras", 
+                           "párrafos/intervención",
+                           "palabras/intervención")
+
+parrafos <- dataset_stats2$`total párrafos`
+media_palabra_parrafo <- dataset_stats2$`palabras/intervención`
+```
+
+
+Para tener una idea general de las características del dataset, el cuadro  \ref{tab:descripcion_dataset} muestra algunos estadísticos de resumen. Las `r filtered_rows` intervenciones, al ser separadas en unidades más pequeñas, dan lugar a un total de `r parrafos` de párrafos, cuya media de palabras es de `r media_palabra_parrafo`.    
+
+
+```{r descripcion_dataset}
+
+
+dataset_stats2 %>% 
+  kbl(format = "latex", booktabs = T, caption = "Estadísticos de resumen") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position")
+
+
+
+```
+Respecto a los párrafos (unidad de análisis), el cuadro \ref{tab:descripcion_parrafos} y la figura \ref{plot_descripcion_parrafos} muestran que el número promedio de palabras es aproximadamente 19 y que, en general, los textos no son demasiado extensos, ya que el 50% tiene 15 palabras o menos y el 90% tiene 39 palabras o menos. El hecho de utilizar una unidad de análisis más desagregada que la intervención, hace más sencilla la identificación de características distintivas en el texto, las cuales cuales tienden a oscurecerse al trabajar con los textos completos, cuya extensión es significativamente mayor, como se muestra en la tabla \ref{tab:descripcion_dataset}.   
+
+```{r descripcion_parrafos}
+largo_parrafos = read_csv("cuadros_tesis/largo_parrafos.csv") 
+
+resumen_parrafos <- largo_parrafos %>% 
+  summarise(media = round(mean(n_palabras), 2),
+            mediana = median(n_palabras),
+            mínimo = min(n_palabras),
+            máximo = max(n_palabras),
+            p90 = quantile(n_palabras, 0.9)
+            )
+
+resumen_parrafos %>% 
+  kbl(format = "latex", booktabs = T, caption = "Estadísticos de resumen de los párrafos") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position")
+
+
+plot_hist <- largo_parrafos %>% 
+  filter(n_palabras <= 200) %>% 
+  ggplot(aes(x = n_palabras)) +
+  geom_histogram(binwidth =  5, color = "coral") +
+  labs(x = "Número de palabras") +
+  theme_bw() +
+  theme(legend.position = "none",
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.caption = element_text(hjust = 0)
+      )
+
+
+ggsave(plot = plot_hist, filename = "cuadros_tesis/plot_hist_descripcion_parrafos.png")
+
+
+
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Histograma del número de palabras por párrafo}
+\label{plot_descripcion_parrafos}
+\includegraphics[width = 0.5 \textwidth]{cuadros_tesis/plot_hist_descripcion_parrafos.png}
+\normalsize
+\end{figure}
+
+
+
+## Biografías parlamentarias biblioteca del congreso nacional
+
+Para obtener la historia de militancia política de los parlamentarios, se utilizaron las biografías publicadas en el sitio de la Biblioteca del Congreso Nacional. Al igual que en el caso de las intervenciones, la información fue extraída mediante técnicas de *webscraping*. 
+
+Una vez finalizada la extracción de datos, fue posible reconstruir la historia de afiliación política de cada uno de los parlamentarios. A partir de esta información, cada intervención parlamentaria puede ser asociada a una militancia específica. 
+
+## Votaciones de diputados
+La última fuente de información corresponde a las votaciones en sala de los parlamentarios. Para obtener estos datos se utilizó una API dispuesta por la Cámara de Diputados, mediante la cual es posible extraer todas las votaciones emitidas en la cámara baja desde 2002 en adelante. Es importante subrayar que solo fue posible obtener las votaciones para diputados en la ventana de tiempo que va de 2002 a 2022. Respecto a las votaciones de senadores no se cuenta con información.
+
+Esta situación es parte de las limitaciones del estudio, ya que no es posible descartar que la ausencia de datos más antiguos para diputados y la inexistencia de datos para senadores, esté introduciendo algún sesgo en los resultados.
+
+Con el objeto de dar cuenta de la naturaleza y uso de los datos de votaciones 
+
+
+
+# Metodología
+
+Esta sección describe los principales aspectos metodológicos que se encuentran a la base de los datos presentados en el apartado resultados. Se entregan las principales características del diccionario utilizado, la metodología de *word embeddings* y cómo es que esta es utilizada para ubicar cada texto en la polaridad cognitiva-afectiva. 
+
+
+## Word embeddings \label{word_emb}
+El procesamiento de texto requiere llevar a cabo algún procedimiento para convertir el lenguaje en una representación numérica que sea legible para un algoritmo. Cualquier procedimiento que permita convertir palabras en números se denomina *word embeddings* [@intro_deep_learning]. 
+
+Dentro de las estrategias para construir vectores de palabras, una de las más utilizadas es el modelo *Word2vec*, cuya idea fundamental es que el significado de una palabra depende del contexto en el que esta se encuentre. Siguiendo dicha noción, para aprender vectores de palabras, se entrena una red neuronal utilizando grandes volúmenes de texto, lo cual se puede llevar a cabo mediante dos estrategias alternativas: CBOW (*Continues Bag of Words*) o *skip-gram* [@aggarwal]. En el modelo CBOW se entrena una red neuronal para que prediga una palabra a partir de su contexto. Al contrario, en el enfoque *skip-gram* se utiliza una palabra para predecir el contexto. 
+
+Si se define que el contexto corresponde a dos palabras, en CBOW utilizaremos las dos palabras anteriores y las dos posteriores para predecir una palabra central. A la inversa, bajo la estrategia *skip-gram* se utiliza como entrada la palabra central, para predecir las dos anteriores y dos posteriores. 
+
+En términos de arquitectura, los modelos están conformados por una capa de entrada, una capa oculta y una capa de salida. La capa oculta determina la cantidad de dimensiones que tendrán los vectores de palabras. De este modo, si la capa escondida contiene 100 neuronas, el número de dimensiones para representar cada palabra será 100. Cabe señalar que tanto la capa de entrada como la de salida tienen el mismo número de dimensiones, correspondiente a la cantidad de palabras distintas en el corpus utilizado para llevar a cabo el entrenamiento. 
+
+Los modelos descritos no se diferencian en lo fundamental de los autocodificadores (*autoencoders*). Se busca llevar a cabo un aprendizaje no supervisado [@intro_deep_learning], lo cual es posible gracias a la disponibilidad de grandes volúmenes de texto y a la posibilidad de procesar la información mediante una tarjeta gráfica. Ahora bien, debido a que el proceso de entrenamiento por lo general es costoso, es frecuente utilizar modelos desarrollados por personas u organizaciones que cuentan con *hardware* adecuado para este tipo de tareas.        
+
+En el marco de este trabajo se utilizaron los vectores entrenados por [@word_embeddings] del Departamento de Ciencias de la Computación de la Universidad de Chile. Los autores utilizan un algoritmo llamado *FastText* [@fasttext] sobre un corpus en español llamado *Spanish Unannotated Corpora* (SUC) \footnote{Corpus construido a partir de una gran cantidad de fuentes. El dataset está conformado por 300 millones de líneas. Para mayores detalles sobre el dataset, ver https://github.com/josecannete/spanish-corpora}. *FastText* recoge la idea de que es posible capturar el significado de las palabras a partir de sus contextos, sin embargo, se diferencia de *Word2Vec* en el hecho de que el texto no es dividido en palabras, sino en conjuntos de caracteres más pequeños. El significado se construye en este caso a partir de los caracteres que componen las palabras. Ello hace posible, entre otras cosas, obtener vectores para cualquier palabra, independiente de que estas hayan estado o no presentes en el corpus de entrenamiento.
+
+Pérez y Cañete (2019) ponen a disposición varios modelos, cuya diferencia principal dice relación con el número de dimensiones que tienen los vectores. El más pequeño está conformado por vectores de 10 dimensiones, mientras que el más grande, por vectores de 300 dimensiones. Con el objeto de acelerar el procesamiento de los datos este trabajo utilizó el modelo de 100 dimensiones.  
+
+Los vectores de palabras construidos mediante *FastText* y *Word2Vec* han demostrado ser capaces de capturar el significado de las palabras. Así, palabras que aparecen en contextos similares, estarán cerca en el espacio proyectado, lo cual implica que es posible llevar a cabo operaciones algebraicas y agrupar palabras según la dirección en la que apunten los vectores. Por ejemplo, si buscamos los vectores más cercanos a *rojo* (utilizando similitud coseno u otra medida de distancia), se observa que el resultado corresponde a otros colores.    
+
+```{python, eval = FALSE, echo = T}
+colores =  wordvectors.most_similar(positive=['rojo'],  topn = 5)
+```
+
+
+
+```{r tabla_colores}
+colores_df =  read_csv("cuadros_tesis/ejemplo_embeddings_colores.csv")
+colores_df <- colores_df %>% 
+  select(palabra, similitud)
+
+colores_df %>% 
+  mutate(similitud = round(similitud, 3)) %>% 
+  kbl(format = "latex", booktabs = T, caption = "Palabras más cercanas a rojo") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position") 
+
+
+```
+
+
+
+La idea de que las palabras cercanas tienen un correlato en el espacio se puede expresar de manera gráfica mediante un ejercicio de reducción de dimensionalidad. Dado que las palabras han sido convertidas en vectores, es posible llevar a cabo procedimientos de reducción de dimensionalidad. La figura \ref{plot_pca_ejemplo} corresponde a las dos primeras componentes de un Análisis de Componentes Principales (PCA). Se puede observar que al proyectar los vectores en este nuevo espacio de dos dimensiones las posiciones de las palabras generan agrupaciones conceptuales. De hecho, podemos observar tres grupos: animales, colores y comidas.
+
+```{r demostracion_pca}
+library(ggrepel)
+pca <- read_csv("cuadros_tesis/pca_example.csv")
+variance_pca <- read_csv('cuadros_tesis/pca_retained_variance.csv')
+
+# Varianza retenida por las 2 primeras componentes
+variance_pca2 <- variance_pca %>% 
+  mutate(varianza = round(varianza * 100, 1) )
+
+# Gráfico para demostrar la agrupación de palabras
+plot_pca <- pca %>% 
+  mutate(grupo = case_when(
+    word %in% c("perro", "conejo", "caballo", "mono") ~ "animal",
+    word %in% c("verde", "rojo", "azul", "amarillo") ~ "color",
+    word %in% c("pizza", "hamburguesa", "arroz") ~ "comida"
+  )) %>% 
+  ggplot(aes(d1, d2)) +
+  geom_point(color = "blue") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_text_repel(aes(label = word)) +
+  labs(x = paste0("componente 1   ", variance_pca2 %>% filter(componente == "componente1") %>% pull(varianza), "%") ,
+       y = paste0("componente 2   ", variance_pca2 %>% filter(componente == "componente2") %>% pull(varianza), "%")
+       ) 
+  
+ggsave(plot = plot_pca, filename = "cuadros_tesis/plot_pca.png")  
+  
+```
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Agrupación de palabras en un espacio bidimensional}
+\label{plot_pca_ejemplo}
+\includegraphics[width = 0.5 \textwidth]{cuadros_tesis/plot_pca.png}
+\normalsize
+\end{figure}
+
+
+Los vectores también permiten construir analogías del tipo $a$ es a $b$ como $x$ es a $y$ y establecer operaciones como la siguiente:
+
+$$reina \approx rey - hombre + mujer$$
+
+Mediante alguna medida de distancia (usualmente, similitud coseno) se busca el vector más cercano a $rey$ y a $mujer$ y que, al mismo tiempo, se aleje del vector $hombre$. La tabla \ref{tab:ejemplo_analogia} muestra que el vector más parecido, efectivamente, corresponde a *reina*, seguido por *princesa* y otras palabras que podrían ajustarse a la analogía. En ese sentido, los vectores permiten construir relaciones semánticas complejas y, por ende, son útiles para representar el lenguaje humano.      
+
+```{r ejemplo_analogia}
+
+analogia_df =  read_csv("cuadros_tesis/ejemplo_embeddings_analogia.csv")
+analogia_df <- analogia_df %>% 
+  select(palabra, similitud)
+
+analogia_df %>% 
+  mutate(similitud = round(similitud, 3)) %>% 
+  kbl(format = "latex", booktabs = T, caption = "Ejemplo de analogía con Word Embeddings") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position") 
+
+
+```
+
+Existen al menos dos grandes ventajas de utilizar el enfoque de *word embeddings* en lugar de estrategias que busquen simplemente la presencia o ausencia de palabras en un texto,
+
+1. No se requiere un *match* exacto de palabras, ya que es posible trabajar con la noción de distancia en un espacio vectorial. A modo de ejemplo, si un diccionario contiene la palabra *rabia* y no la palabra *ira* y se intenta clasificar el texto *los políticos a veces sienten ira*, el enfoque de *word embeddings* será capaz de detectar que la palabra *ira* se ubica cerca de *rabia*, asignando un puntaje conforme a alguna medida de distancia. Al contrario, una estrategia que considere únicamente la presencia de una palabra, no podrá asignar puntaje.
+
+2. No se requiere establecer *a priori* el puntaje de cada palabra del diccionario. Inevitablemente, al utilizar diccionarios surge la pregunta sobre la intensidad de una palabra respecto a algún concepto. Por ejemplo, ¿las palabras *amistad* y *amor* deberían tener el mismo puntaje de afectividad? Existen diccionarios [BUSCAR LA REFERENCIA] que efectivamente establecen medidas en, por ejemplo, la polaridad positivo-negativo utilizando una metodología basada en jueces especializados. Una estrategia posible es que todas las palabras tengan puntaje igual a 1, de modo de evaluar simplemente la presencia o ausencia de las mismas en un texto, sin embargo, asignar el mismo puntaje no resuelve el problema, pues es una ponderación posible entre muchas otras (todas las palabras tienen la misma ponderación). El enfoque de *word embeddings* no requiere tomar este tipo de decisiones, ya que el vector que representa una palabra contiene su significado. Si el entrenamiento funcionó y los vectores efectivamente dan cuenta del significado de las palabras, entonces, no es necesario lidiar con la asignación de ponderaciones.  
+
+
+
+## Diccionario LIWC
+La estrategia para construir los polos cognitivo y emotivo comienza con un diccionario llamado LIWC (*Linguistic Inquiry and Word Count*). Este diccionario clasifica una gran cantidad de palabras en una serie de dimensiones. Su construcción ha sido validada por psicólogos del lenguaje [@linguistic_dictionary] y presenta una serie de propiedades psicométricas que lo hacen confiable para fines estadísticos. Dentro de las dimensiones del diccionario existe una relacionada con procesos psicológicos, la cual a su vez contiene las subdimensiones de procesos cognitivos y procesos afectivos. El primer paso, entonces, consiste en seleccionar todas las palabras que están etiquetadas en estas 2 subdimensiones. 
+
+```{r filtro_polos}
+filtro_polos <- read_csv("cuadros_tesis/filtrado_polos.csv") %>% 
+  mutate(across(c("inicial", "pos", "centroide"),  ~format(., big.mark=".", decimal.mark = ",", scientific=FALSE) )) 
+
+tabla_filtro_polos <- filtro_polos %>% 
+  select(polo, `conteo inicial` = inicial,  `conteo POS` = pos,  `conteo final` = centroide ) 
+
+inicial_afectivo <- filtrar_polos(filtro_polos, "afectivo", inicial)
+pos_afectivo <- filtrar_polos(filtro_polos, "afectivo", pos)
+centroide_afectivo <- filtrar_polos(filtro_polos, "afectivo", centroide)
+
+inicial_cognitivo <- filtrar_polos(filtro_polos, "cognitivo", inicial)
+pos_cognitivo <- filtrar_polos(filtro_polos, "cognitivo", pos)
+centroide_cognitivo <- filtrar_polos(filtro_polos, "cognitivo", centroide)
+
+```
+
+Siguiendo la metodología propuesta en [@paper_central], se lleva a cabo selección de palabras en dos pasos. En primer lugar, se extraen los sustantivos comunes, adjetivos y verbos, por medio de una técnica de etiquetado llamada POS (*part of speech*). Con ello, se busca retener aquellas palabras que aportan mayor significado a la clasificación en la polaridad cognitivo-afectivo. Al llevar a cabo dicho filtro, la cantidad inicial de palabras en el polo afectivo cae de `r inicial_afectivo` a `r pos_afectivo` y de `r inicial_cognitivo` a `r pos_cognitivo`, en el polo afectivo (tabla \ref{tab:tabla_filtro_polos}).     
+
+
+```{r tabla_filtro_polos}
+
+tabla_filtro_polos <- tabla_filtro_polos %>% 
+  kbl(format = "latex", booktabs = T, caption = "Total de intervenciones parlamentarias") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position") %>% 
+  footnote(general_title = "Fuente:", "Elaboración propia con datos de LIWC", footnote_as_chunk = T )
+  
+tabla_filtro_polos
+
+
+```
+
+
+El segundo paso en la selección de palabras consiste en remover aquellas que estén menos correlacionadas con cada una de las polaridades. Cada uno de los polos contiene una gran cantidad de palabras y es posible que algunas no estén fuertemente correlacionadas con cada una de las polaridades. De hecho, de acuerdo a la metodología de LIWC es posible que una misma palabra se encuentre etiquetada tanto en el polo cognitivo como emotivo. En ese sentido, es deseable eliminar las palabras que introduzcan ruido y/o que no faciliten una correcta discriminación entre los polos.  
+
+Para generar un set de palabras final para cada polaridad, se utilizan los vectores descritos en el apartado \ref{word_emb}, es decir, cada una de las palabras es mapeada a un vector de 100 dimensiones, lo cual genera una matriz de `r pos_afectivo`X100 para el polo afectivo y de `r pos_cognitivo`X100 para el polo cognitivo. Una vez finalizado dicho procedimiento, se realizan los siguientes pasos:
+
+1. Se calcula el centroide de cada una de las matrices
+2. Se calcula la similitud coseno de cada uno de los vectores con su respectivo centroide
+3. Se ordenan las palabras de menor a mayor similitud
+4. Se conserva el 20% de palabras en cada polaridad \footnote{Para determinar este porcentaje se consideró la cercanía resultante entre los vectores cognitivo y afectivo y se intentó maximizar la distancia entre ambos. Dado que las polaridades se utilizan para discriminar entre distintos tipos de textos, es deseable que los vectores no se acerquen demasiado. Para revisar los valores obtenidos a partir de diferentes porcentajes de palabras retenido.}
+
+El listado final de palabras luego de aplicar los pasos anteriores es de `r centroide_afectivo` en el polo afectivo y `r centroide_cognitivo`, en el cognitivo (tabla \ref{tab:tabla_filtro_polos}). El objetivo de remover palabras dice relación con la necesidad de construir una medida de afectividad y cognición consistente en si misma, que permita discriminar correctamente entre discursos de una polaridad u otra. A continuación, se muestran las palabras del diccionario que más se acercan al centroide de cada polo, es decir, aquella palabras que mejor dan cuenta de la dimensión cognitiva y afectiva.    
+
+
+```{r graficos_palabras_polaridad}
+palabras_afectivo = read_csv("cuadros_tesis/df_affective_final.csv")
+palabras_cognitivas = read_csv("cuadros_tesis/df_cognitive_final.csv")
+
+plot_cognitiva <-  palabras_cognitivas %>% 
+  arrange(desc(cos)) %>% 
+  slice(1:10) %>% 
+  mutate(cos = round(cos, 2)) %>% 
+  ggplot( aes(x = reorder(word, cos), y = cos)) +
+  geom_segment(aes(x = reorder(word, cos),
+                   xend = reorder(word, cos),
+                   y = 0, yend = cos),
+               color = "gray", lwd = 1) +
+  geom_point(size = 9, pch = 21, bg = 4, col = 1) +
+  geom_text(aes(label = cos), color = "white", size = 3) +
+  xlab("") +
+  ylab("Similitud coseno") +
+  coord_flip() +
+  theme_bw()
+
+plot_afectiva <-  palabras_afectivo %>% 
+  arrange(desc(cos)) %>% 
+  slice(1:10) %>% 
+  mutate(cos = round(cos, 2)) %>% 
+  ggplot( aes(x = reorder(word, cos), y = cos)) +
+  geom_segment(aes(x = reorder(word, cos),
+                   xend = reorder(word, cos),
+                   y = 0, yend = cos),
+               color = "gray", lwd = 1) +
+  geom_point(size = 9, pch = 21, bg = 4, col = 1) +
+  geom_text(aes(label = cos), color = "white", size = 3) +
+  xlab("") +
+  ylab("Similitud coseno") +
+  coord_flip() +
+  theme_bw()
+
+plots <- plot_cognitiva + plot_afectiva
+
+ggsave(plot = plots, filename = "cuadros_tesis/plot_important_words.png", width = 10)
+
+
+```
+\begin{figure}[H]
+\centering
+\large
+\caption{Palabras del diccionario más representativas de cada polaridad}
+\label{n_year}
+\includegraphics[width = 0.7 \textwidth]{cuadros_tesis/plot_important_words.png}
+\normalsize
+\end{figure}
+
+Con el objetivo de validar que los vectores efectivamente estén midiendo afectividad y cognición, es importante observar cuáles son las palabras del corpus que más se acercan a cada una de las polaridades. Para ello, se calculó la similitud coseno entre cada una de las 193.205\footnote{Este número corresponde al total de palabras luego de haber aplicado un procedimiento de tokenización, mediante el cual se eliminan *stoptwords* y se seleccionan solo los adjectivos, sustantivos y verbos} palabras del corpus que no están dentro del diccionario y los vectores que representan a los polos cognitivo y afectivo. Las figuras \ref{fig:nube_afectiva}  \ref{fig:nube_cognitiva} muestran a través de su tamaño cuán cerca se encuentra una palabra de cada una de las polaridades. Se observa que, efectivamente, los vectores construidos para cada una de las polaridades dan cuenta de afectividad y cognición, ya que mientras en el panel izquierdo (polaridad afectiva) palabras como *rencoroso*, *atormentado* y *enfado* muestran una presencia importante, en el panel derecho resaltan verbos como *decir*, *demostrar* y *preguntar*.
+
+Cabe mencionar que las palabras del polo afectivo presentan un sesgo hacia emociones tradicionalmente consideradas como negativas. El motivo de ello es que el diccionario utilizado tiene un sesgo hacia palabras de este tipo, lo que implica que la construcción del vector de afectividad esté sesgado hacia ese tipo de emociones, cuestión que debe tenerse en consideración al momento de analizar los resultados. Con el objeto de descartar que el polo afectivo esté capturando únicamente emociones negativas, se llevaron a cabo algunas pruebas con palabras usualmente consideradas positivas como *amor*, *alegría* o *risa*. Este ejercicio arrojó como resultado una asociación más fuerte con el vector emotivo que con el cognitivo, lo que da cuenta de que si bien existe un sesgo hacia emociones negativas, el instrumento es capaz de dar cuenta también de emociones positivas.      
+
+
+\begin{figure}[H]
+     \caption{Nubes de palabras }
+     \centering
+     \begin{subfigure}[b]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{cuadros_tesis/wordcloud_affective.png}
+         \caption{Polo afectivo}
+         \label{fig:nube_afectiva}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{cuadros_tesis/wordcloud_cognitive.png}
+         \caption{Polo cognitivo}
+         \label{fig:nube_cognitiva}
+     \end{subfigure}
+     \label{fig:nubes}
+     \caption*{\footnotesize{\textit{Nota:} Cada nube contiene las 200 palabras con mayor similitud coseno respecto a los vectores cognitivo y afectivo. El tamaño de las palabras se pondera de acuerdo al valor de la similitud coseno.}}
+\end{figure}
+
+
+
+
+## Identificación de la polaridad
+
+## Identificación de tópicos
+
+## Polarización política
+
+# Resultados
+
+## Estadística descriptiva polos y tópicos
+
+## Regresión
+
+# Conclusiones
+Mis grandes conclusiones
+
+\newpage 
+
+# Referencias
+
