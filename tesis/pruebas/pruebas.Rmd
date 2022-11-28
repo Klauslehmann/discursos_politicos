@@ -1,0 +1,34 @@
+---
+output:
+  pdf_document:
+    #latex_engine: xelatex
+#    number_sections: true
+ #   fig_caption: true
+  #  keep_tex: yes
+#lang: "es-CO"
+#fontsize: 12pt
+#mainfont: Georgia
+#bibliography: references.bib
+#csl: apa.csl 
+
+header-includes:
+  - \usepackage{dcolumn}
+  - \usepackage{rotating}
+  - \usepackage{xcolor}
+  - \usepackage[bottom]{footmisc}
+  - \usepackage{setspace}
+  - \usepackage{multirow}
+  - \usepackage{footnote}
+  - \usepackage{caption}
+  - \usepackage{subcaption}
+  - \usepackage[font=small,labelfont=it,margin=\parindent,tableposition=top]{caption}
+  - \usepackage{lmodern}
+
+---
+# pero 
+
+
+
+
+
+

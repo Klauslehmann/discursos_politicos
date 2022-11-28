@@ -1,4 +1,7 @@
 
+
+
+
 #id_nombre: identificador de nombre para un político
 # id_numero: identificador numérico para un político
 # Busca en la página del congreso nacional la biografía de cada político. Descarga algunos campos de interés
@@ -85,8 +88,12 @@ detectar_errores <- function() {
 descargar_id_votaciones <-  function(anio) {
   url <-   paste0("http://opendata.camara.cl/camaradiputados/WServices/WSLegislativo.asmx/retornarVotacionesXAnno?prmAnno=", anio)
 
-  dataframe <- xmlToDataFrame(url)
+  temp <- tempfile()
+  download.file(url,temp)
 
+  dataframe <- XML::xmlToDataFrame(doc = temp)
+  unlink(temp)  
+  
   dataframe
 
 
@@ -94,13 +101,15 @@ descargar_id_votaciones <-  function(anio) {
 # Recibe un identificador de votación y devuelve la votación de cada diputado
 descargar_detalle_votacion <- function(id_votacion) {
 
-
+  #eid_votacion <- id_votaciones_unicos$Id[1]
   root <- "http://opendata.camara.cl/camaradiputados/WServices/WSLegislativo.asmx/retornarVotacionDetalle?prmVotacionId="
 
+  temp <- tempfile()
+  
   url <- paste0(root, id_votacion)
-
-
-  xml <- xmlTreeParse(url, useInternal = T)
+  download.file(url,temp)
+  xml <- xmlTreeParse(temp, useInternal = T)
+  unlink(temp)  
   xml_list <- xmlToList(xml)
 
 
@@ -120,9 +129,15 @@ get_deputy_parties<- function(party = "last") {
 
   # Consultamos los datos de todos los diputados
   url <- "http://opendata.camara.cl/camaradiputados/WServices/WSDiputado.asmx/retornarDiputados?"
-  xml <- xmlTreeParse(url, useInternal = T)
+  
+  temp <- tempfile()
+  download.file(url, temp)
+  xml <- xmlTreeParse(temp, useInternal = T)
+  unlink(temp)
+  
   xml_list <- xmlToList(xml)
-
+  
+  
   # Crear una lista inicial con las militancias de todos los parlamentarios
   militancias <- map(xml_list, ~.x$Militancias)
 
@@ -295,8 +310,9 @@ create_nominate_input <- function(year, votes_sample = 1) {
   id_votaciones_unicos <- id_votaciones %>%
     distinct()
 
-  # Descagar el detalle de votos  para cada votación
-  plan(multisession, workers = 8)
+  # Descargar el detalle de votos  para cada votación
+  
+  plan(multisession, workers = parallel::detectCores())
   votaciones <- future_map(id_votaciones_unicos$Id,
                            possibly(~descargar_detalle_votacion(.x), otherwise = "error"))
 
@@ -321,7 +337,7 @@ create_nominate_input <- function(year, votes_sample = 1) {
 
   result <- append(result, list(year = year))
 
-  return(result)
+  return(list("nominate" = result, "votos" = clean_data))
 
 }
 

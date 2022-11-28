@@ -28,14 +28,15 @@ wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddin
 text_vector = copy.copy(df.texto_dep)
 split_text = np.array_split(text_vector, 10)
 
-#corrió hasta la partición 6
+##################################
+# CREAR DATOS A NIVEL DE PÁRRAFO #
+##################################
+
 
 # Procesar texto y guardar cada parte por separado, para no colapsar la memoria
 particion = 1
 start_time = time.time()
 for fraction in split_text:
-    #pool = multiprocessing.Pool(processes=cpus)
-    #tokenized_text = pool.map(partial(pre_process_text, relevant_pos = ["NOUN", "ADJ", "VERB"], mode = "word", paragraph = True), fraction )
     tokenized_text = [pre_process_text(t, paragraph=True) for t in fraction]
     tokenized = list(map(lambda x:x[0], tokenized_text)) 
     original_text = list(map(lambda x:x[1], tokenized_text))
@@ -53,6 +54,32 @@ for fraction in split_text:
 
     
 print("--- %s seconds ---" % (time.time() - start_time))
+
+
+##################################
+# CREAR DATOS A NIVEL DE ORACIÓN #
+##################################
+# Procesar texto y guardar cada parte por separado, para no colapsar la memoria
+particion = 1
+start_time = time.time()
+for fraction in split_text:
+    tokenized_text = [pre_process_text(t, paragraph=False) for t in fraction]
+    tokenized = list(map(lambda x:x[0], tokenized_text)) 
+    original_text = list(map(lambda x:x[1], tokenized_text))
+
+    # Convertir cada palabra en un embeddings y luego promediar las palabras de cada párrafo
+    sentences_centroids_sentence = convert_to_vec(wordvectors, tokenized, mode = "sentence")  
+
+    save_list("/home/klaus/discursos_politicos/data/original_phrases_sentences_parte", particion, original_text)
+    save_list("/home/klaus/discursos_politicos/data/tokenization_phrases_parte", particion, tokenized)
+    save_list("/home/klaus/discursos_politicos/data/centroids_phrases_sentence_parte", particion, sentences_centroids_sentence)
+    del tokenized_text, tokenized, original_text 
+    print("parte", particion)
+    particion += 1
+
+    
+print("--- %s seconds ---" % (time.time() - start_time))
+
 
 
 

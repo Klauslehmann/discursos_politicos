@@ -16,15 +16,16 @@ source("scripts/helpers.R")
 # Ejemplo de uso para un año específico
 ########################################
 
-
 # COnseguir los id de cada votación. Se guardaen un dataframe todos los id de las votaciones
-anios <- 2002
-id_votaciones <-  map_df(anios, descargar_id_votaciones)
+anios <- 2018
+id_votaciones <- map_df(anios, descargar_id_votaciones)
 id_votaciones_unicos <- id_votaciones %>%
   distinct()
 
+x <- descargar_detalle_votacion(id_votaciones_unicos$Id[1])
+
 # Descagar el detalle de votos  para cada votación
-plan(multisession, workers = 8)
+plan(multisession, workers = 12)
 votaciones <- future_map(id_votaciones_unicos$Id,
                     possibly(~descargar_detalle_votacion(.x), otherwise = "error"))
 
@@ -88,9 +89,12 @@ nominate <- map(2002:2022, function(x) {
 } )
 toc()
 
+# Construir una tabla con el total de votaciones para cada año 
+tabla_votaciones <- map_df(nominate, ~bind_rows(.x$votos)  )
+write_feather(tabla_votaciones, "data/tabla_full_votaciones.feather")
 
 # Construir una tabla para todos los años con los valores de las primeras 2 dimensiones
-nominate_anios <- map(nominate, ~.x$legislators %>%
+nominate_anios <- map(nominate, ~.x$nominate$legislators %>%
       mutate(year = .x$year)
       ) %>%
   bind_rows()
@@ -139,8 +143,8 @@ nominate_anios %>%
 ggsave("graficos/wnominate_patidos_varios_anios_lineas.pdf", width = 17, height = 12)
 
 
-
-
 # Guardar identificadores de votaciones
-write_feather(nominate_anios, "data/clean_data/nominate_years.feather")
+# Este script no ha sido ejecutado completamente en este computador, lo que implica que si se corre todo, los datos no 
+# corresponderán a los que se usan en la tesis, ya que el periodo de descarga será mayor.  
+write_feather(nominate_anios, "data/nominate_years.feather")
 

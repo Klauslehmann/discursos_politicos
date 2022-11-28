@@ -18,24 +18,25 @@ nlp = spacy.load('es_core_news_md')
 ################
 # CARGAR DATOS #
 ################
+n = 8
 
 centroids_sentence = []
-for parte in range(1, 11):
-    file_name = "/home/klaus/discursos_politicos/data/centroids_sentence_parte{parte}".format(parte = parte)
+for parte in range(1, n):
+    file_name = "/home/klaus/discursos_politicos/data/centroids_phrases_sentence_parte{parte}".format(parte = parte)
     with open(file_name, "rb") as fp:
       particion = pickle.load(fp)
       centroids_sentence.extend(particion)        
 
 tokenized = []
-for parte in range(1, 11):
-    file_name = "/home/klaus/discursos_politicos/data/tokenization_parte{parte}".format(parte = parte)
+for parte in range(1, n):
+    file_name = "/home/klaus/discursos_politicos/data/tokenization_phrases_parte{parte}".format(parte = parte)
     with open(file_name, "rb") as fp:
       particion = pickle.load(fp)
       tokenized.extend(particion)        
 
 original_text = []
-for parte in range(1, 11):
-    file_name = "/home/klaus/discursos_politicos/data/original_sentences_parte{parte}".format(parte = parte)
+for parte in range(1, n):
+    file_name = "/home/klaus/discursos_politicos/data/original_phrases_sentences_parte{parte}".format(parte = parte)
     with open(file_name, "rb") as fp:
       particion = pickle.load(fp)
       original_text.extend(particion)        
@@ -129,7 +130,7 @@ df_phrases = pd.DataFrame(data)
 df['id_speech'] = np.arange(len(df))
 
 # Construir tabla con las columnas relevantes
-df_full = pd.merge(df[["id_speech", "polo", "fecha", "texto_dep", "anio", "partido", "nombre", "edad_actual", "sexo"]], df_phrases, on='id_speech')
+df_full = pd.merge(df[["id_speech", "polo", "texto_dep", "anio", "partido", "nombre", "edad_actual", "sexo"]], df_phrases, on='id_speech')
 
 # Crear un id correlativo para cada una de las frases
 df_full ['id_phrase'] = np.arange(len(df_full))
@@ -145,14 +146,13 @@ df_filtrado = df_full[df_full["n_words"] >= 3 ].reset_index()
 # Se guarda el archivo full en esta sección para liberar un poco de memoria
 del data, df_phrases
 del df_full["texto_dep"]  # borrar la información de textos, porque hace que el archivo pese demasiado
-df_full.to_feather("data/score_full.feather")
+df_full.to_feather("data/score_full_phrases.feather")
 del df_full
 
 
 ###############
 # CREAR TÓPICOS 
 ###############
-
 
 # Cargar el modelo para encontrar tópicos
 classifier = pipeline("zero-shot-classification", 
@@ -217,9 +217,9 @@ test_text2 =  df[df["id_speech"] == int(id_test) ].texto_dep
 # GUARDAR DATOS #
 #################
 del df_filtrado["texto_dep"]
-df_filtrado .to_feather("data/score_filtered.feather")
-df_filtrado .to_csv("data/score_filtered.csv")
-df_topics.to_feather("data/topics_test_paragraph.feather")
+df_filtrado .to_feather("data/score_filtered_phrases.feather")
+df_filtrado .to_csv("data/score_filtered_phrases.csv")
+df_topics.to_feather("data/topics_test_phrases.feather")
 
 ###################
 # LIMPIAR MEMORIA #

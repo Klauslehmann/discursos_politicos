@@ -1,0 +1,18 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Introducción}{5}{section.1}%
+\contentsline {section}{\numberline {2}Literatura sobre emotividad y polarización}{6}{section.2}%
+\contentsline {section}{\numberline {3}Fuentes de información y preprocesamiento}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Textos parlamentarios biblioteca del congreso nacional}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Biografías parlamentarias biblioteca del congreso nacional}{10}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Votaciones de diputados}{10}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Metodología}{12}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Word embeddings }{12}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Diccionario LIWC}{15}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Identificación de la polaridad}{18}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Identificación de tópicos}{22}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Polarización política }{23}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Resultados}{26}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Estadística descriptiva polos y tópicos}{26}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Regresión}{26}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Conclusiones}{26}{section.6}%
+\contentsline {section}{Referencias}{27}{section*.26}%

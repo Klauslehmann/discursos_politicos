@@ -10,6 +10,7 @@ import re
 ################
 
 # Cargar datos originales
+df_filtrado_phrases =  pd.read_feather("data/score_filtered_phrases.feather")
 df_filtrado =  pd.read_feather("data/score_filtered.feather")
 
 # Cargar datos de nominate
@@ -42,10 +43,15 @@ plt.hist(df_filtrado[df_filtrado["score"] < 1.5].score, bins = n_bins)
 plt.figure().clear()
 
 # Ver las frases más afectivas
-afectivas = df_filtrado.sort_values(by=['score'], ascending=False)["text"][0:100]
+afectivas = df_filtrado.sort_values(by=['score'], ascending=False)["text"][0:200]
+afectivas_phrases = df_filtrado_phrases.sort_values(by=['score'], ascending=False)["text"][0:200]
+
 
 # Ver las frases más cognitivas
-cognitivas = df_filtrado.sort_values(by=['score'])["text"][0:100]
+cognitivas = df_filtrado.sort_values(by=['score'])["text"][0:200]
+cognitivas_phrases = df_filtrado_phrases.sort_values(by=['score'])["text"][0:200]
+
+
 
 # Ver puntajes de ambos cosenos
 plt.hist(df_filtrado.cos_affect, bins = n_bins)
@@ -188,6 +194,14 @@ get_mean("coloma")
 ########################
 # DESCRIPCIÓN TEMPORAL #
 ########################0
+
+# Indicador a lo largo del tiempo
+df_filtrado.groupby("anio")["score"].mean()
+
+
+# Evolución del indicador a lo largo del tiempo 
+score_tendency2[score_tendency2["anio"] < 2022].pivot(index='anio', columns='polo', values='score')
+
 
 # Descripción de tendencias por polo-año
 score_tendency_wide= score_tendency2[score_tendency2["anio"] < 2022].pivot(index='anio', columns='polo', values='score')

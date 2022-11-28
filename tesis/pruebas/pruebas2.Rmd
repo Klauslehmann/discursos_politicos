@@ -1,0 +1,65 @@
+---
+title: "Untitled"
+output: pdf_document
+date: "2022-10-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r}
+library(tidyverse)
+library(feather)
+```
+
+
+
+```{r}
+nominate_anios <- read_feather("../cuadros_tesis/nominate_years.feather")
+
+
+# Gráfico de puntos por año
+p_nominate <-  nominate_anios %>%
+  select(coord1D, party, year) %>%
+  arrange(coord1D) %>%
+  filter(!is.na(coord1D)) %>%
+  filter(party %in% c("PCS", "UDI", "RN", "PC", "PS", "PPD", "DC", "RD", "EVOP", "PREP")) %>%
+  group_by(party, year) %>%
+  mutate(coord1D = mean(coord1D)) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(anio_par = if_else(year %% 2 == 0, 1, 0)) %>% 
+  filter(anio_par == 1 ) %>% 
+  ggplot(aes(x =  reorder(party, coord1D ),  y = coord1D, color = party, label = party)) +
+  geom_point(size = 4) +
+  geom_text(hjust=1.5, vjust=0,  size=5) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip() +
+  labs(
+       y = "w-nominate",
+       x = "partido",
+       caption = "Fuente: Elaboración propia con datos de la Cámara de Diputados") + 
+  theme_bw() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        text = element_text(size = 15)
+        )
+
+ggsave("cuadros_tesis/nominate_partido_anio.png", width = 17, height = 20)
+
+```
+
+
+
+\begin{figure}
+\centering
+\large
+\caption{W-NOMINATE: Puntaje promedio por partido de la primera dimensión}
+\label{w_nominate_plot}
+\includegraphics[width =  \textwidth]{cuadros_tesis/nominate_partido_anio.png}
+\normalsize
+\end{figure}
+
