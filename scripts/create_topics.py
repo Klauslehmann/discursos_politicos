@@ -44,6 +44,7 @@ indices = tx.index
 # Constuir dataframe con un subconjunto de textos clasificados con tópico 
 dic = {"id_phrase": df_filtrado.id_phrase[indices],
        "id_original_text": df_filtrado.id_speech[indices],
+       "fecha": df_filtrado.fecha[indices],
        "name": df_filtrado.nombre[indices],
        "text": tx, 
        "topic": labels,
@@ -62,7 +63,6 @@ df_topics= pd.DataFrame(dic ).reset_index()
 #################
 # GUARDAR DATOS #
 #################
-del df_filtrado["texto_dep"]
 df_filtrado .to_feather("data/score_filtered.feather")
 df_filtrado .to_csv("data/score_filtered.csv")
-df_topics.to_feather("data/topics_test_paragraph.feather")
+
