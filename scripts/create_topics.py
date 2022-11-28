@@ -9,7 +9,10 @@ import time
 # CREAR TÓPICOS 
 ###############
 
-df_full = pd.read_feather("data/score_full.feather")
+#df_full = pd.read_feather("data/score_full.feather")
+#df_full .to_csv("data/score_full.csv")
+
+df_full = pd.read_csv("data/score_full.csv")
 df_filtrado = df_full[df_full["n_words"] >= 3 ].reset_index()
 
 # Cargar el modelo para encontrar tópicos
