@@ -1,0 +1,107 @@
+---
+title: "Emotividad y polarización política en discursos parlamentarios: 1965 a 2022"
+output:
+  pdf_document:
+    #latex_engine: xelatex
+    number_sections: true
+    fig_caption: true
+    keep_tex: yes
+lang: "es-CO"
+fontsize: 12pt
+#mainfont: Georgia
+bibliography: references.bib
+#csl: apa.csl 
+header-includes:
+  - \usepackage{dcolumn}
+  - \usepackage{rotating}
+  - \usepackage{xcolor}
+  - \usepackage[bottom]{footmisc}
+  - \usepackage{setspace}
+  - \usepackage{multirow}
+  - \usepackage{footnote}
+  - \usepackage{caption}
+  - \usepackage{subcaption}
+  - \usepackage[font=small,labelfont=it,margin=\parindent,tableposition=top]{caption}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, eval = T, message = F)
+library(tidyverse)
+library(feather)
+library(kableExtra)
+library(plotly)
+library(patchwork)
+
+options(scipen = "999")
+source("scripts_helpers_tesis/funciones.R", encoding = "utf-8")
+
+```
+
+Portada de la tesis
+
+\newpage
+
+<!-- tabla contenidos -->
+\newpage
+\begin{spacing}{0.9} 
+\tableofcontents
+\end{spacing} 
+
+\newpage
+
+<!-- Lista de tablas -->
+\begin{spacing}{0.9} 
+\listoftables
+\end{spacing} 
+
+<!-- Lista de figuras -->
+\newpage
+\listoffigures
+\newpage
+\normalsize
+
+
+
+# Introducción
+
+```{r introducción, child='introduccion.Rmd', eval=TRUE}
+```
+
+
+
+\pagebreak 
+
+
+# Literatura sobre emotividad y polarización
+
+```{r revision literatura, child='revision_literatura.Rmd', eval=TRUE}
+```
+
+\pagebreak 
+
+```{r metodologia, child='metodologia.Rmd', eval=T}
+
+```
+
+\pagebreak 
+
+# Resultados
+
+```{r resultados, child='resultados.Rmd', eval=TRUE}
+```
+
+\newpage 
+
+# Conclusiones
+
+
+```{r conclusiones, child='conclusiones.Rmd', eval=TRUE}
+```
+
+
+\newpage 
+
+# Referencias
+
+

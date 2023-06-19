@@ -13,6 +13,7 @@ from helpers import filter_important_words
 from helpers import create_pole
 from helpers import remove_rows
 from helpers import get_cos_percentage
+from gensim.models import FastText
 
 
 # Argumentos del script
@@ -21,6 +22,7 @@ m = "word"
 # Insumos
 nlp = spacy.load('es_core_news_md')
 wordvectors = load_facebook_model('/home/klaus/discursos_politicos/data/embeddings-m-model.bin') 
+#wordvectors = FastText.load("/home/klaus/discursos_politicos/data/embeddings-100-own.model")
 
 ##########################
 # GENERAR LAS CATEGORÍAS #
@@ -180,8 +182,8 @@ valores = [i / 10 for i in range(1,10)]
 correlacion_polos =  [get_cos_percentage(x, df_affective, df_cognitive, wordvectors) for x in valores ]
 
 # Eliminar  las palabras que están más alejadas del centroide de cada uno de los polos
-df_affective_final = remove_rows(df_affective, 0.8)
-df_cognitive_final = remove_rows(df_cognitive, 0.8)
+df_affective_final = remove_rows(df_affective, 0.8) 
+df_cognitive_final = remove_rows(df_cognitive, 0.8) 
 
 
 ################################
@@ -241,8 +243,8 @@ len(repeated)
 get_cosine(cognitive_vector, affective_vector)
 
 
-df_affective_final.sort_values(by='cos', ascending=False)
-df_cognitive_final.sort_values(by='cos', ascending=False)
+w_affect = df_affective_final.sort_values(by='cos', ascending=False)
+w_cog = df_cognitive_final.sort_values(by='cos', ascending=False)
 
 
 ###################

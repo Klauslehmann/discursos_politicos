@@ -210,10 +210,7 @@ bios_edit <- bios_edit %>%
                                           "partido radical socialdemócrata", "radical de chile"),
                            "partido radical", partido),
          partido = edit_text(partido),
-         partido = if_else(partido == "renovacion nacional", "partido renovacion nacional", partido)
-
-
-         )
+         partido = if_else(partido == "renovacion nacional", "partido renovacion nacional", partido)         )
 
 # Poner sexo a 2 casos para los que no se encontró etiqueta
 bios_edit <- bios_edit %>%
@@ -225,7 +222,20 @@ bios_edit <- bios_edit %>%
   ) )
 
 
+# Construir una tabla que identifica si la persona era miembro del Senado o de la Cámara en un periodo específico
+camara_senado <-  bios %>% 
+  mutate(periodo_numeric = str_extract(periodos, "[[:digit:]]{4}-[[:digit:]]{4}")) %>% 
+  mutate(camara = tolower(periodos),
+         camara= str_extract(camara, "diputado|senador|diputada|senadora") 
+         ) %>% 
+  mutate(nombre = str_replace_all(id_nombre, "_", " "),
+         nombre = tolower(nombre)
+         ) %>% 
+  select(nombre, camara, periodo_numeric, id_nombre)
+  
 
+# Se guarda una tabla que permite saber a cuál de las dos cámaras pertenece cada político en un periodo determinado  
+write_feather(camara_senado, "data/datos_camara.feather")
 
 ########################
 # Unir textos con bios #
@@ -394,5 +404,10 @@ filtrado_dt_final <- filtrado_dt_final %>%
 
 # Guardar datos para la investigación
 write_feather(filtrado_dt_final, "data/edicion_inicial_light.feather")
+
+
+
+x2 <- x %>% 
+  left_join()
 
 

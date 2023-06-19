@@ -1,0 +1,623 @@
+
+# Resultados
+
+En el presente apartado se presentan los principales resultados obtenidos a partir del análisis de los textos parlamentarios.  
+
+## Estadística descriptiva de polos y tópicos
+
+Para tener una primera mirada del fenómeno estudiado es útil observar los datos en perspectiva histórica. El siguiente gráfico muestra los niveles de emotividad desde 1965 hasta 2022 (con una ventana de 17 años). Es posible identificar una sere de fenómenos interesantes:
+
+1) Respecto al periodo 1965-1973 se registra en promedio, un nivel más alto de emotividad que en el periodo postdictadura. Entre 1965 y 1970, durante el gobierno de Frei Montalva, se registra una caída del nivel de emotividad en ambas cámaras. La interpretación de dicha caída no es sencilla, ya que al no contar con datos anteriores, no es posible saber con certeza si la disminución se explica por fenómenos sociales del momento o por movimientos estacionales relacionados con los cambios de gobierno. Respecto a esto último, es perfectamente plausible que los niveles de emotividad hayan alcanzado niveles altos al comienzo del gobierno de Frei y hayan comenzado a caer conforme se acercaba el fin del periodo presidencial. De hecho, al comenzar el gobierno de la Unidad Popular también pareciera producirse un aumento de la emotividad, lo cual empuja a pensar en la hipótesis de un comportamiento cíclico. Ahora bien, el aumento notorio de la emotividad registrado en los meses previos a septiembre de 1973, hace pensar en una explicación un poco más coyuntural vinculada a la situación política que vivía el país en aquella época.  
+
+2) Luego del retorno a la democracia, se registran altos niveles de emotividad, muy cercanos a los que existían en septiembre de 1973. Este nivel desciende rápidamente durante los primeros meses del gobierno de Aylwin.    
+
+3) Desde el retorno a la democracia, el comportamiento de la emotividad en la Cámara de Diputados presenta un comportamiento cíclico asociado al recambio de parlamentarios. Las líneas punteadas marcan los meses en los que asumen sus funciones los diputados recién electos y, en general, dichos momentos tienden a coincidir con peaks de emotividad, después de lo cual se evidencia una caída.   
+
+4) La cámara de diputados, a mediados de la primera década de los dosmil, comienza a distanciarse de la trayectoria del Senado hacia niveles más altos de emotividad, acercándose a los niveles existentes en el periodo 1965-1973.  
+
+
+
+
+```{r}
+library(tidyverse)
+
+# Cargar datos
+score <- arrow::read_feather("cuadros_tesis/tabla_timeline.feather")
+score_senado <- arrow::read_feather("cuadros_tesis/tabla_timeline_senadores.feather")
+score_diputado <- arrow::read_feather("cuadros_tesis/tabla_timeline_diputados.feather")
+score_diputado_derecha_izquierda <- arrow::read_feather("cuadros_tesis/timeline_diputados_polos.feather")
+
+# Datos de tópicos
+topics <- arrow::read_feather("cuadros_tesis/topicos.feather")
+
+# Datos con nominate
+nominate <- read_csv("cuadros_tesis/nominate_topic.csv")
+
+
+
+
+```
+
+```{r}
+score_senado <- score_senado %>% 
+  mutate(camara = "senado")
+
+score_diputado <- score_diputado %>% 
+  mutate(camara = "diputado")
+
+ambas_camaras <- score_senado %>% 
+  bind_rows(score_diputado)
+
+
+```
+
+
+
+
+```{r grafico_ambas_camaras}
+
+plot_timeline_camaras <- ambas_camaras  %>% 
+  mutate(camara = if_else(camara == "diputado", "cámara", camara )) %>% 
+  ggplot(aes(x = mes, y = ma, group = camara, color = camara)) +
+  geom_line() +
+  scale_x_continuous(breaks =  as.Date(c("1970-11-03", "1973-09-11", "1994-04-01", "1998-04-01", "2002-04-01", "2006-04-01", "2010-04-01", "2014-04-01", "2018-04-01", "2022-04-01"))) +
+  geom_vline(xintercept = as.Date( "1970-11-03"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1973-09-11"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1994-04-01"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1998-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2002-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2006-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2010-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2014-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2018-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2022-04-01"), linetype = "dotted", color = "black") +
+  labs(x = "fecha", y = "emotividad") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 12),
+        legend.title = element_blank()
+  )
+
+ggsave(plot = plot_timeline_camaras, "cuadros_tesis/plot_timeline_camaras.png", width = 11, height = 5)
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Emocionalidad y cognición a lo largo del tiempo}
+\label{score_time}
+\includegraphics[width = 1 \textwidth]{cuadros_tesis/plot_timeline_camaras.png}
+     \caption*{\footnotesize{\textit{Nota:} El gráfico fue construido con los textos que tienen al menos 4 \textit{tokens}. El formato de las fechas es año-mes-día }}
+\normalsize
+\end{figure}
+
+
+En la figura \ref{topicos} se muestra el promedio de emocionalidad en cada uno de los tópicos detectados. Se puede observar que el ordenamiento de los tópicos guarda relación con las materias que usualmente presentan un carácter más técnico. Así, pensiones, impuestos y transporte toman valores más cercanos al polo cognitivo, mientras que aborto, cultura y deporte, dan cuenta de mayores nivel de emocionalidad. 
+
+
+```{r grafico topicos}
+topicos <-  topics %>% 
+  group_by(topic) %>% 
+  summarise(media = mean(score)) %>% 
+  filter( !is.na(topic)) 
+
+orden_topicos <- topicos %>% 
+  arrange(media) %>% 
+  pull(topic)
+  
+plot_topicos <-  topicos %>% 
+  ggplot(aes(x = reorder(topic, media) , y = media)) +
+  geom_point() +
+  theme_bw() +
+  coord_flip() +
+  theme(
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 9),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+        axis.title.y = element_blank()
+  ) +
+  labs(y = "emocionalidad") 
+
+
+  # theme(axis.text.x = element_text( size = 10),
+  #       axis.text.y = element_text(size = 10),
+  #       axis.title = element_text(size = 12),
+  #       axis.title.y = element_blank(),
+  #       panel.grid.minor = element_blank(),
+  #       panel.grid.major = element_blank(),
+  #       plot.caption = element_text(hjust = 0),
+  #       legend.text = element_text(size = 12),
+  #       legend.title = element_blank(),
+  #     
+  # ) +
+
+
+
+ggsave(plot = plot_topicos, "cuadros_tesis/plot_topicos.png", width = 6, height = 3)
+
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Emocionalidad y cognición, según tópicos}
+\label{topicos}
+\includegraphics[width = 1 \textwidth]{cuadros_tesis/plot_topicos.png}
+     \caption*{\footnotesize{\textit{Nota:} El gráfico fue construido con los textos que tienen al menos 4 \textit{tokens}. El formato de las fechas es año-mes-día }}
+\normalsize
+\end{figure}
+
+
+
+La figura \ref{plot_polo_topico} muestra el promedio de emocionalidad en cada uno de los tópicos detectados, según el posicionamiento político (derecha, izquierda o centro) de los parlamentarios \footnote{Construido con base en la militancia de cada parlamentario}.. Se puede observar que los discursos emitidos por políticos de centro y derecha no tienen una gran diferencia, mientras que los de izquierda sí se distancian de los demás. De hecho, en todos los tópicos, los discursos ligados a la izquierda son los que muestra un mayor valor de emocionalidad. Es interesante el caso del tópico sindicalismo, cuyo valor en el polo de izquierda se distancia bastante del de los demás, lo cual arroja luces de que este tema sigue siendo sensible para dicho grupo.    
+
+
+
+
+```{r grafico polo topico}
+
+# Gráfico
+polo_topico <-  topics %>% 
+  group_by(polo, topic) %>% 
+  summarise(media = mean(score)) %>% 
+  ungroup() %>% 
+  filter(!is.na(polo) & !is.na(topic)) %>% 
+  mutate(topic = fct_relevel(topic, orden_topicos)) %>% 
+  ggplot(aes(x =  topic, y = media, color = polo)) +
+  geom_point() +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.text.x = element_text( size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 9),
+        axis.title.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+      
+  ) +
+   labs(y = "emocionalidad") 
+
+
+ggsave(plot = , polo_topico, filename =  "cuadros_tesis/plot_polo_topico.png", width = 6.5, height = 3.5)
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Emocionalidad y cognición a lo largo del tiempo}
+\label{plot_polo_topico}
+\includegraphics[width = 1 \textwidth]{cuadros_tesis/plot_polo_topico.png}
+     \caption*{\footnotesize{\textit{Nota:} fsdfsfsdf }}
+\normalsize
+\end{figure}
+
+
+A fin de dar cuenta del nivel de emocionalidad a través del tiempo, la figura \ref{plot_topico_tiempo} muestra una selección de tópicos en cada uno de los extremos. Se puede observar que el nivel de emocionalidad en cada uno de los tópicos no experimenta cambios demasiado notorios. Así, por ejemplo, no se advierte que un tópico con alta emocionalidad, como familia, de pronto, adquiera valores al nivel de pensiones, lo que hace pensar que las materias tratadas en en el congreso tienen un comportamiento estructural respecto al nivel de emocionalidad con el aquellas son abordadas.   
+
+```{r grafico topicos en el tiempo, eval=T}
+
+years <- c(1974:1989)
+
+aux = data.frame(anio = rep(1974, 4), topic = c("cultura", "impuestos", "pensiones", "familia"), score = rep(NA, 4))
+
+plot_topico_tiempo <-  topics %>%
+  filter(topic %in% c("cultura", "impuestos", "pensiones", "familia") ) %>% 
+  filter(anio < 2022) %>% 
+  group_by(anio, topic) %>% 
+  summarise(score = mean(score)) %>% 
+  ungroup() %>%
+  bind_rows(aux) %>% 
+  ggplot(aes(x = anio, y = score, group = topic, color = topic)) +
+  geom_line() +
+  theme_bw() +
+  theme(axis.text.x = element_text( size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_text(size = 9),
+        axis.title.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+      
+  )
+
+ggsave(plot = plot_topico_tiempo, "cuadros_tesis/plot_topico_tiempo.png", width = 6, height = 3)
+
+```
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Emocionalidad y cognición en algunos tópicos a lo largo del tiempo}
+\label{plot_topico_tiempo}
+\includegraphics[width = 1 \textwidth]{cuadros_tesis/plot_topico_tiempo.png}
+     \caption*{\footnotesize{\textit{Nota:} fsdfsfsdf }}
+\normalsize
+\end{figure}
+
+
+Con el objeto de entender un poco mejor la relación entre posicionamiento político y emocionalidad, es posible utilizar los valores de WNOMINATE. Este indicador, al posicionar ideológicamente a todos los políticos desde izquierda a derecha \footnote{El indicador se mueve entre -1 y 1. En el caso de este estudio, valores negativos corresponden a posiciones de izquierda, mientras que valores positivos a posiciones de derecha. Para más detalles, ver el apartado metodológico}, permite estudiar la relación utilizando una variable continua. La figura da cuenta de una cierta relación negativa entre posicionamiento y emocionalidad. Así, parlamentarios posicionados más hacia el extremo izquierdo del espectro presentan un mayor nivel de emocionalidad, la cual va decreciendo conforme el indicador WNOMINATE avanza hacia posiciones más de derecha. Esto contrasta con la evidencia encontrada por @paper_central para EEUU, país en el que esta relación presenta una forma de U, de modo que todos los discursos en los extremos están vinculados a altos niveles de emocionalidad y no solo los de izquierda, como se aprecia en la figura \ref{plot_nominate_score}.  
+
+
+```{r plot nominate score}
+nominate <- nominate %>% 
+  mutate(bin = cut(coord1D, breaks= seq(-1, 1.1, 0.1) ),
+         polo_nominate = if_else(coord1D < 0, "izquierda", "derecha")
+         ) 
+
+bins <- nominate %>%
+  filter(!is.na(topic)) %>% 
+  group_by(bin) %>% 
+  summarise(score = mean(score))
+
+
+plot_nominate_score <- bins %>% 
+  ggplot(aes(x = bin, y = score, group = 1)) +
+  geom_line() +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 90),
+        axis.text = element_text(size = 8),
+        axis.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+        
+  )
+
+
+
+ggsave(plot =  plot_nominate_score, "cuadros_tesis/plot_nominate_score.png", width = 6, height = 3)
+```
+
+
+
+\begin{figure}[H]
+\centering
+\large
+\caption{Relación entre WNOMINATE y emocionalidad}
+\label{plot_nominate_score}
+\includegraphics[width = 1 \textwidth]{cuadros_tesis/plot_nominate_score.png}
+     \caption*{\footnotesize{\textit{Nota:} fsdfsfsdf }}
+\normalsize
+\end{figure}
+
+
+
+
+## Regresiones (PENSAR EN UN MEJOR TÍTULO)
+
+
+
+```{r cargar modelos}
+modelo1 <- read_csv("cuadros_tesis/modelo_sin_nominate1_1217260.csv")
+modelo2 <- read_csv("cuadros_tesis/modelo_sin_nominate2_1217260.csv")
+modelo3 <- read_csv("cuadros_tesis/modelo_sin_nominate3_1217260.csv")
+modelo4 <- read_csv("cuadros_tesis/modelo_sin_nominate4_1217260.csv")
+modelo_nom1 <- read_csv("cuadros_tesis/modelo_con_nominate1_344559.csv")
+modelo_nom2 <- read_csv("cuadros_tesis/modelo_con_nominate2_344559.csv")
+
+
+```
+
+```{r edicion tablas modelos}
+
+modelo1_edit <- modelo1 %>% 
+  select(- "...1" ) %>% 
+  filter(!str_detect(variable, "C\\((anio|age_group)") & !str_detect(variable, "Intercept")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star) %>% 
+  bind_rows(data.frame(variable = "efectos fijos años", coef = "sí"))
+
+modelo2_edit <- modelo2 %>% 
+  select(- "...1" )  %>% 
+  filter(!str_detect(variable, "C\\(age_group") & !str_detect(variable, "Intercept")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star) %>% 
+  bind_rows(data.frame(variable = "efectos fijos años", coef = "no"))
+
+modelo3_edit <- modelo3 %>% 
+  select(- "...1" ) %>% 
+  filter(!str_detect(variable, "C\\((anio|age_group)") & !str_detect(variable, "Intercept")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star) %>% 
+  bind_rows(data.frame(variable = "efectos fijos años", coef = "no"))
+
+
+modelo4_edit <- modelo4 %>% 
+  select(- "...1" ) %>% 
+  filter(!str_detect(variable, "C\\((anio|age_group)") & !str_detect(variable, "Intercept")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star) %>% 
+  bind_rows(data.frame(variable = "efectos fijos años", coef = "no"))
+
+
+
+
+modelo_nom1_edit <- modelo_nom1 %>% 
+  select(- "...1" ) %>% 
+  filter(!str_detect(variable, "C\\((anio|age_group)") & !str_detect(variable, "Intercept")) %>% 
+  filter(!str_detect(variable, "C\\(anio")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star) %>% 
+  bind_rows(data.frame(variable = "efectos fijos años", coef = "sí"))
+
+
+
+modelo_nom2_edit <- modelo_nom2 %>% 
+  select(- "...1" ) %>% 
+  filter(!str_detect(variable, "C\\((anio|age_group)") & !str_detect(variable, "Intercept")) %>% 
+  mutate(star = case_when(
+    pvalues < 0.01 ~ "***",
+    pvalues >= 0.01 & pvalues < 0.05   ~ "**",
+    pvalues >= 0.05 & pvalues < 0.1    ~ "*",
+    T ~ ""
+  )) %>% 
+  mutate(coef = paste0(round(coef, 3), star, "\n ", "(", round(se, 3), ")" )) %>% 
+  select(-star)
+
+
+
+```
+
+```{r modelos sin nominate}
+
+efectos_fijos = data.frame(variable = c("efectos fijos año"),
+                           `modelo 1` = c("Sí"),
+                           `modelo 2` = c("No"),
+                           `modelo 3` = c("No"),
+                           `modelo 4` = c("No")
+                           ) 
+names(efectos_fijos) <- str_replace_all(names(efectos_fijos), "\\.", " ")  
+
+efectos_anio_camara = data.frame(variable = c("efectos fijos año-cámara"),
+                           `modelo 1` = c("No"),
+                           `modelo 2` = c("No"),
+                           `modelo 3` = c("No"),
+                           `modelo 4` = c("Sí")
+                           ) 
+names(efectos_anio_camara) <- str_replace_all(names(efectos_anio_camara), "\\.", " ")  
+
+
+cluster_correlation = data.frame(variable = c("errores clusterizados"),
+                           `modelo 1` = c("Sí"),
+                           `modelo 2` = c("Sí"),
+                           `modelo 3` = c("Sí"),
+                           `modelo 4` = c("Sí")
+                           )
+names(cluster_correlation) <- str_replace_all(names(cluster_correlation), "\\.", " ")  
+
+n_data <-  data.frame(variable = c("observaciones"),
+                           `modelo 1` = c("1.217.260"),
+                           `modelo 2` = c("1.217.260"),
+                           `modelo 3` = c("1.217.260"),
+                           `modelo 4` = c("1.217.260")
+                      ) 
+
+names(n_data) <- str_replace_all(names(n_data), "\\.", " ")  
+  
+
+modelo_full <-  modelo1_edit %>% 
+  select(variable, "modelo 1" = coef) %>% 
+  full_join(modelo2_edit %>% 
+              select( variable, "modelo 2" = coef),
+            by = "variable") %>% 
+  full_join(modelo3_edit %>% 
+              select(variable, "modelo 3" =  coef),
+            by = "variable") %>% 
+  full_join(modelo4_edit %>% 
+              select(variable, "modelo 4" =  coef),
+            by = "variable") %>% 
+  filter(variable != "efectos fijos años") %>% 
+  bind_rows(efectos_fijos) %>% 
+  bind_rows(efectos_anio_camara) %>% 
+  bind_rows(n_data) %>% 
+  mutate_all(~if_else(is.na(.), "", .)) %>% 
+  mutate(cat_base = str_extract(variable, "T\\..+\\]"),
+         cat_base = str_remove_all(cat_base, "T|[[:punct:]]")
+         ) %>% 
+  mutate(variable = if_else(str_detect(variable, "educación"), paste("tópico", cat_base) , variable)) %>% 
+  mutate(variable = case_when(
+    variable == "C(sexo Treatment(reference='hombre'))[T.mujer]" ~ "sexo",
+    variable == "C(role)[T.senador]" ~ "cámara",
+    variable == "C(polo Treatment(reference='derecha'))[T.centro]" ~ "centro",  
+    variable == "C(polo Treatment(reference='derecha'))[T.izquierda]" ~ "izquierda",  
+    variable == "C(predictadura)[T.1]" ~ "periodo predictadura",
+    variable == "C(anio_periodo)[T.2]" ~ "segundo año",
+    variable == "C(anio_periodo)[T.3]" ~ "tercer año",
+    variable == "C(anio_periodo)[T.4]" ~ "cuarto año",    
+    TRUE ~ variable
+  )) %>% 
+  select(-cat_base) 
+
+
+
+
+
+
+
+
+
+```
+
+
+```{r modelos con nominate}
+
+efectos_fijos = data.frame(variable = c("efectos fijos año"),
+                           `modelo 1` = c("Sí"),
+                           `modelo 2` = c("No")) 
+names(efectos_fijos) <- str_replace_all(names(efectos_fijos), "\\.", " ")  
+cluster_correlation = data.frame(variable = c("errores clusterizados"),
+                           `modelo 1` = c("Sí"),
+                           `modelo 2` = c("Sí"))
+names(cluster_correlation) <- str_replace_all(names(cluster_correlation), "\\.", " ")  
+
+n_data <-  data.frame(variable = c("observaciones"),
+                           `modelo 1` = c("344.559"),
+                           `modelo 2` = c("344.559")) 
+
+names(n_data) <- str_replace_all(names(n_data), "\\.", " ")  
+
+
+modelo_reducido <- modelo_nom1_edit %>% 
+  select(variable, "modelo 1" = coef) %>% 
+  full_join(modelo_nom2_edit %>% 
+              select( variable, "modelo 2" = coef),
+            by = "variable") %>% 
+  filter(variable != "efectos fijos años") %>% 
+  bind_rows(efectos_fijos) %>% 
+  bind_rows(n_data) %>% 
+  mutate_all(~if_else(is.na(.), "", .)) %>% 
+  mutate(cat_base = str_extract(variable, "T\\..+\\]"),
+         cat_base = str_remove_all(cat_base, "T|[[:punct:]]")
+         ) %>% 
+  mutate(variable = if_else(str_detect(variable, "educación"), paste("tópico", cat_base) , variable)) %>% 
+  mutate(variable = case_when(
+    variable == "C(sexo)[T.mujer]" ~ "sexo",
+    variable == "C(role)[T.senador]" ~ "cámara",
+    variable == "C(polo Treatment(reference='derecha'))[T.centro]" ~ "centro",  
+    variable == "C(polo Treatment(reference='derecha'))[T.izquierda]" ~ "izquierda",  
+    variable == "C(predictadura)[T.1]" ~ "periodo predictadura",
+    TRUE ~ variable
+  )) %>% 
+  select(-cat_base) 
+
+# Reordenar las variables, para que aparezca nominate en primer lugar
+modelo_reducido <- modelo_reducido %>% 
+  mutate(variable = fct_relevel(variable, "sexo", "w2_standard", "tópico aborto", "tópico cultura", "tópico deporte", "tópico familia", 
+                                "tópico impuestos", "tópico medioambiente", "tópico pensiones", "tópico salud", "tópico sindicalismo", 
+                                "tópico transporte", "centro", "izquierda", "efectos fijos año", "observaciones")) %>% 
+  arrange(variable) %>% 
+  mutate(variable = if_else(variable == "w2_standard", "w2 standard", variable ))
+
+
+
+
+```
+
+
+
+Con el objeto de analizar el efecto de algunas variables en el indicador construido, a continuación se muestran dos grupos de modelos lineales. La diferencia entre ambos grupos dice relación con el número de observaciones consideradas. En el primer grupo (cuadro \ref{tab:imprimir_regresion_full}) se incluyen todos los textos para los cuales se cuenta con información de tópicos, es decir, alrededor de 1.2 millones de registros (de un total de 2.4 millones). El segundo grupo de modelos (cuadro \ref{tab:imprimir_regresion_nominate}) contiene una muestra reducida, compuesta únicamente por los registros para los que se cuenta con el valor de WNOMINATE, correspondiente a 344.559 textos.         
+
+Para facilitar la interpretación, los valores del indicador de emocionalidad han sido estandarizados. Cabe recordar que valores más altos se encuentran asociados al polo afectivo, mientras que valores bajos se asocian a textos con un carácter más cognitivo. Todas las especificaciones *clusterizan* los errores estándar a nivel de político. 
+
+En términos generales, la cuadro \ref{tab:imprimir_regresion_full} muestra relaciones estadísticamente significativas entre los regresores y el indicador de emocionalidad. La única variable sin significancia estadística es edad, por lo cual no se presentan sus coeficientes y solo se incluye como control. La diferencia entre las 4 especificaciones consiste en el tipo de control utilizado para la variable tiempo. En la primera especificación se incorpora un control por efectos fijos de año; en la segunda, dicho control se reemplaza por una variable que indica el año de cada periodo parlamentario; en la tercera especificación se utiliza un control para diferencias entre los periodos pre y post dictadura. Finalmente, la especificación 4 incorpora un de efectos fijos para año-cámara.
+
+Se observa que ser senador (versus diputado) está vinculado a un menor nivel de emotividad (signo negativo), lo cual coincide con la idea de que la discusión en el Senado tiene un carácter más reflexivo y un poco más distanciado de la política contingente. Otras características que presentan una relación negativa son los tópicos tradicionalmente considerados de carácter más técnico, como impuestos, pensiones y transporte. El signo de los coeficientes para dichos tópicos dan cuenta de una asociación con el polo cognitivo del indicador construido.     
+
+Por su parte, las variables que aumentan el nivel de emotividad son sexo (mujer) y una posición de izquierda en el espectro político (comparado con una posición de derecha). Respecto a la categoría "centro" en la variable de posicionamiento político, cabe mencionar que aquella no muestra una diferencia significativa respecto a una posición de derecha.     
+
+La segunda especificación incluye un regresor que permite identificar el efecto que tiene el tiempo en cada periodo parlamentario. Dado que en Chile han ocurrido elecciones parlamentarias cada aproximadamente 4 años, es posible clasificar los años desde el 1 hasta el 4, respecto a la elección más cercana. En ese sentido, la categoría 1 representa el primer año del periodo, mientras que la categoría 4 corresponde al último. Tanto la inspección visual, presentada en el apartado anterior, como el signo de los coeficientes muestra que el nivel de emotividad tiende a caer conforme avanzan los periodos parlamentarios. Ello hace suponer la existencia de un comportamiento cíclico a través del cual las intervenciones en el congreso adquieren tonos más afectivos y cognitivos, dependiendo del proceso político.   
+
+Otro aspecto a considerar sobre la segunda especificación es la pérdida de significancia estadística de la variable sexo que se produce al reemplazar el control de efectos fijos de año por el del periodo parlamentario. Dicha significancia retorna en la especificación 3, en la cual se agrega un control que separa los datos en periodos pre y postdictadura. Posiblemente, esto pueda deberse a la baja presencia de mujeres en el periodo 1965-1973, la cual comienza a aumentar con el retorno a la democracia, de modo tal que al incluir el control por estos dos periodos, se hace visible el efecto de la variable sexo. Por su parte, el signo positivo de la variable pre-post dictadura   indica que el periodo 1965-1973 tiene un efecto positivo sobre el indicador. En ese sentido, los gráficos de la sección anterior que mostraban valores más altos en la etapa predictadura encuentran un correlato en el coeficiente de la regresión.   
+
+La especificación número 4 incluye un control por efectos fijos año-cámara, con el objeto de identificar si las trayectorias de cada unas de las cámaras está relacionada con el indicador de emocionalidad. Al incluir este control, desaparece el efecto de la variable cámara, lo cual confirma que existen trayectorias diferenciadas (PREGUNTAR ACÁ). 
+
+```{r imprimir_regresion_full}
+
+# Dejar el error estándar justo debajo del coeficiente
+modelo_full <- modelo_full %>% 
+  mutate_at(vars(starts_with("modelo")), ~linebreak(., align = "l"))
+
+
+kbl(modelo_full,
+    format = "latex", 
+    booktabs = T, 
+    align = "l",
+    escape = F,
+    caption = "Especificaciones sin WNOMINATE") %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position", font_size = 10) %>% 
+  pack_rows("Tópicos", 3, 12) %>% 
+  pack_rows("Posicionamiento político", 13, 14) %>% 
+  pack_rows("Periodo parlamentario", 15, 17) %>% 
+  footnote("La variable dependiente corresponde al indicador de emocionalidad, cuyos valores han sido estandarizados. Valores elevados indican mayor emocionalidad. Todas las especificaciones clusterizan los errores a nivel de político e incluyen un control de edad. Las categorías de referencia para las variables sexo, cámara, tópicos, posicionamiento político y periodo son las siguientes: mujer, diputado, educación, derecha y predictadura, respectivamente. *, ** y *** denotan 90%, 95% y 99% de confianza.", 
+           general_title = "Nota:",
+           footnote_as_chunk = T, threeparttable = T,fixed_small_size = F
+           )
+
+```
+
+El cuadro \ref{tab:imprimir_regresion_nominate} contiene especificaciones muy similares a las ya comentadas. La diferencia radica en que estos modelos incluyen polarización política (WNOMINATE). La manera de incorporar esta información ha sido mediante la llave persona-año, es decir, se ha calculado de forma independiente para cada año el valor de WNOMINATE. Ello quiere decir que las intervenciones parlamentarias se vinculan al posicionamiento ideológico que los políticos tenían en el momento en que aquellas ocurrieron.
+
+Es importante recordar que los valores de WNOMINATE se mueven entre -1 y 1, donde valores negativos representan posiciones más a la izquierda y valores positivos más a la derecha. Para poder interpretar los valores de WNOMINATE como una medida de polarización, estos se elevan al cuadrado. De esta manera, números altos indicarán mayor nivel de polarización. Al realizar esta operación se pierde la noción de posicionamiento ideológico, sin embargo, dicha información ya está siendo incluida a través de la variable polo.
+
+Tanto en la especificación que incluye efectos fijos por año como en la que no, se observa una relación positiva en la variable WNOMINATE. Ello quiere decir que una mayor polarización ideológica estaría asociada a mayores niveles de emotividad en el discurso de los parlamentarios. Esta evidencia encuentra respaldo en una línea de investigación (CITAR ) que da cuenta de que los políticos que están en los extremos del espectro ideológico recurren a un recurso basado en argumentación por la vía de la emotividad.   
+
+
+
+
+```{r imprimir_regresion_nominate }
+
+modelo_reducido <- modelo_reducido %>% 
+  mutate_at(vars(starts_with("modelo")), ~linebreak(., align = "l"))
+
+
+
+
+kbl(modelo_reducido, 
+    format = "latex", 
+    booktabs = T,
+    caption = "Especificaciones con WNOMINATE",
+    align = "l",
+    escape = F
+    ) %>% 
+  kable_styling(position = "center", latex_options = "HOLD_position", full_width = F, font_size = 10) %>% 
+  pack_rows("Tópicos", 3, 12) %>% 
+  pack_rows("Posicionamiento político", 13, 14) %>% 
+ footnote("La variable dependiente corresponde al indicador de emocionalidad, cuyos valores han sido estandarizados. Valores elevados indican mayor emocionalidad. Todas las especificaciones clusterizan los errores a nivel de político e incluyen un control de edad. La variable WNOMINATE ha sido elevada al cuadrado. Las categorías de referencia para las variables sexo, tópicos y posicionamiento político son: mujer, educación, derecha, respectivamente. *, ** y *** denotan 90%, 95% y 99% de confianza.", 
+           general_title = "Nota:",
+           footnote_as_chunk = T, threeparttable = T,fixed_small_size = T
+           )
+
+```
+
+

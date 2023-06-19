@@ -58,6 +58,15 @@ with open("/home/klaus/discursos_politicos/data/df_cognitive_final", "rb") as fp
   df_cognitive_final = pickle.load(fp)
     
 
+##############################
+# GUARDAR VECTORES EN FEATHER
+##############################
+
+d = {'cognitive': cognitive_vector, 'affective': affective_vector}
+df_vectors =  pd.DataFrame(data=d)
+
+df_vectors .to_feather("tesis/cuadros_tesis/polos_df.feather")
+
 ####################
 # SIMILITUD COSENO #
 ####################

@@ -1,0 +1,25 @@
+
+El presente trabajo explora la relación que existe entre polarización ideológica y emotividad en los discursos parlamentarios, mediante herramientas de procesamiento de lenguaje natural. Explotando un nuevo set de datos de discursos parlamentarios, se aporta evidencia sobre un tema escasamente abordado ene el contexto chileno. 
+
+Dado que esta es la primera investigación que estudia el fenómeno de la emocionalidad en los discursos parlamentarios chilenos, se ha seguido un enfoque exploratorio, que sin ser totalmente concluyente, entrega evidencia interesante respecto al fenómeno estudiado. La conclusión más relevante es que existe una vinculación entre la polarización ideológica de los parlamentarios y el nivel de emocionalidad de sus intervenciones en el Congreso. Así, políticos ubicados en posiciones más extremas tienden a utilizar discursos con un cariz más cercano al polo emotivo que al cognitivo. 
+
+Cabe destacar que a diferencia de lo encontrado en (XXX), de manera gráfica, no existe una relación en forma de U entre polarización ideológica y emotividad. En lugar de ello, se advierte que valores posiciones más de izquierda están asociadas a una mayor nivel de emotividad. 
+
+Es un hecho conocido que la discusión política contiene una dimensión emotiva, lo cual no constituye un hecho negativo en si mismo, sin embargo, es relevante conocer cuál es el balance entre emotividad y cognición, ya que el espacio de deliberación política debiese estar guiado principalmente por consideraciones racionales. No es irrelevante el hecho de que posiciones más extremas utilicen como recurso argumentativo la emocionalidad. En ese sentido, una línea de investigación interesante sería una que estudie cuál es el nivel de emocionalidad en los discursos parlamentarios de temas que actualmente generan polarización, como la inmigración y la seguridad pública.  
+
+Una segunda conclusión derivada de este estudio es que existe un correlato entre los grandes procesos políticos que ha experimentado el país y el nivel de emocionalidad presente en los discursos parlamentarios. Tanto el quiebre institucional de 1973 como el retorno a la democracia presentan altos niveles de emocionalidad, lo que muestra que existe una conexión entre lo que ocurre en la sociedad y el espacio de poder institucional. Es interesante constatar que los niveles de emocionalidad, en promedio, son más altos en las décadas de los sesentas y setentas, que en el periodo postdictadura. De alguna manera, la efervescencia que existía en la discusión política de aquellos años, caracterizada por el enfrentamiento de proyectos antagónicos de sociedad, se manifestaba en los discursos parlamentarios. Lo contrario sucede con el retorno a la democracia, momento en el cual las tensiones tienden a disminuir, lo que se refleja en menores niveles de emocionalidad. Esta situación podría estar cambiando desde hace algunos años, ya que los datos muestran una modificación en la trayectoria de la emocionalidad, hacia mayores niveles de emocionalidad, al menos en lo que refiere a la Cámara de Diputados.     
+
+Una tercera y última conclusión es que los ciclos del proceso político afectan los niveles de emocionalidad del Congreso. En periodos cercanos a elecciones parlamentarias el nivel de emocionalidad muestra aumentos. Pasado el primer año, el nivel comienza a bajar, lo cual da cuenta de que el fenómeno en estudio tiene una dimensión cíclica y otra de más largo plazo, vinculada esta última a procesos políticos e históricos de carácter más estructural.  
+
+Desde el punto de vista metodológico, este trabajo pone a disposición un set de datos semi estructurado con más de 500.000 intervenciones y biografías parlamentarias, que contiene información desde 1965 a 2022. Cabe destacar que el enfoque exploratorio de esta investigación deja un amplio margen para futuros estudios que puedan sacar más provecho del set de datos construido, de modo que los textos reunidos pueden seguir siendo explotados para entender mejor la historia política reciente de nuestro país.
+
+La estrategia escogida se propone incorporar herramientas de NLP, ampliamente utilizadas en la industria y en la ciencia de datos, pero cuya adopción en los campos de la economía y sociología es aún incipiente. Tradicionalmente, las ciencias sociales han estado alejadas de estrategias de investigación basadas en métodos computacionales, pero durante los últimos años se ha producido un cierre de esta brecha tecnológica, lo cual abre un espacio muy prometedor para que la economía y la sociología exploten grandes volúmenes de información no estructurada, ya sea para revisitar viejos temas o para explorar ámbitos nuevos.        
+
+
+
+
+
+
+
+
+

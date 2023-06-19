@@ -10,6 +10,7 @@ from functools import partial
 from collections import Counter
 from spacy.language import Language
 import pickle
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 nlp = spacy.load('es_core_news_md')
 
@@ -203,3 +204,15 @@ def get_cos_percentage(percentage, df1, df2, wv):
     cos = get_cosine(cognitive_vector, affective_vector)
 
     return [cos, percentage, df_cognitive_final.shape[0], df_affective_final.shape[0]  ]
+
+
+def tokenizar(text):
+    with_punct = [word_tokenize(t)  for t in sent_tokenize(text)] 
+    tokens = [[word for word in sent if word not in [",", ".", "!", "¡", "¿", "?", ":", ";"] ]  for sent in with_punct] 
+    return tokens
+
+
+
+
+
+

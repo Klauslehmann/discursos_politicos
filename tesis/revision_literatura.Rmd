@@ -1,0 +1,19 @@
+
+## Literatura general
+
+XXXXX NOTAS PARA TERMINAR LA REDACCIÓN
+
+
+## Caso chileno 
+
+A partir de la década del 2000, varios autores se han avocado a estudiar el fenómeno de la polarización política al interior del congreso, lo cual ha dado forma a un conjunto de trabajos que, sin ser demasiado extenso, permite entender relativamente bien la dinámica parlamentaria desde el retorno a la democracia hasta la actualidad. Es posible distinguir, al menos, dos líneas de trabajo o énfasis al momento de abordar el tema. La primera línea utiliza los votos individuales (*roll-call voting*) para ordenar a los políticos, partidos y conglomerados en un continuo ideológico, a fin de identificar las dinámicas de cohesión y polarización, utilizando mayoritariamente el método WNOMINATE XXXX POOLE WNOMINATE o métodos bayesianos, basados en remuestreos. La segunda línea de trabajos intenta ir un poco más allá de los votos individuales, poniendo atención a la información disponible sobre coautoría de proyectos de ley. 
+
+Dentro del primer grupo de trabajos, @aleman_2007, utilizando datos de la cámara de diputados, muestran que en el periodo 1997-2000 las dos grandes coaliciones votan de manera altamente cohesionada, lo que da forma a dos bloques con poca superposición ideológica entre sí. A partir ello, los autores descartan la existencia de un centro político, cuya existencia estructuró el régimen político hasta 1973. Respecto a datos del Senado, @aleman_senado muestra conclusiones muy similares para el mismo periodo de estudio, es decir, la dinámica de bloques separados ideológicamente se reproduce en el Senado. En el mismo estudio, los autores analizan datos sobre copatrocinio de proyectos de ley, a partir de lo cual concluyen que en la etapa inicial del trámite legislativo, los Senadores enfrentan menos restricciones que en el momento de la votación, lo cual hace posible cruzar fronteras ideológicas y establecer relaciones de cooperación entre coaliciones. En una línea similar, @alemán_2009 analiza el periodo 1961-2006, llegando a la conclusión de que las redes de cooperación entre los partidos se debilitaron en las década de los sesenta como resultado del aumento de la polarización política y que estas se recomponen progresivamente desde 1990. También aplicando herramientas del análisis de redes, @lefoulon muestra que los proyectos de ley exitosos presentan una mayor colaboración entre colaciones, en comparación con el total de los trámites legislativos, para el periodo 2007-2017.         
+
+Más recientemente, @Fabrega_2022 aplica las ideas sobre ideología y cooperación al contexto de la Convención Constituyente. El autor aporta evidencia de que las metodologías basadas en WNOMINATE o en métodos bayesianos permiten reconstruir adecuadamente el posicionamiento ideológico de los convencionales y entrega datos que respaldan la idea de que quienes cooperan en la realización de propuestas, presentan mayor cercanía ideológica. Uno de los estudios más recientes sobre polarización política describe la situación en el congreso antes y después del plebiscito de salida. Los autores dan cuenta de que se ha producido un aumento de la polarización en ambos lados del espectro y un debilitamiento del centro político.  
+
+La literatura sobre polarización en Chile aborda las dinámicas de cooperación-polarización al interior del congreso, sin embargo, hasta el momento no existen estudios que intenten explicar cuáles son los factores asociados a la polarización. El presente estudio es un intento por avanzar en esta línea de trabajo, aportando evidencia sobre la relación que existe entre polarización y afectividad en la arena política.
+
+
+
+

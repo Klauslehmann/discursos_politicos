@@ -1,0 +1,12 @@
+sacar las stopwords de los diccionarios
+
+ahondar más en cómo se usan las palabras. Quiénes usa nlas palabras y con qué frecuencia
+
+agregar una métrica de precisión
+
+nube de palabras: mirar cómo se distribuyen las palabras en las categorías LIWC, para mostrar que son distintas 
+
+
+agregar más variables al scatter: partido, largo del texto, etc
+
+ojo con el gráfico de líneas

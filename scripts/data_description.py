@@ -46,12 +46,9 @@ plt.figure().clear()
 afectivas = df_filtrado.sort_values(by=['score'], ascending=False)["text"][0:200]
 afectivas_phrases = df_filtrado_phrases.sort_values(by=['score'], ascending=False)["text"][0:200]
 
-
 # Ver las frases más cognitivas
 cognitivas = df_filtrado.sort_values(by=['score'])["text"][0:200]
 cognitivas_phrases = df_filtrado_phrases.sort_values(by=['score'])["text"][0:200]
-
-
 
 # Ver puntajes de ambos cosenos
 plt.hist(df_filtrado.cos_affect, bins = n_bins)
@@ -59,7 +56,6 @@ plt.figure().clear()
 
 plt.hist(df_filtrado.cos_cognitive, bins = n_bins)
 plt.figure().clear()
-
 
 # Ver puntaje de parlamentarios 
 score_names = df_filtrado.groupby("nombre")["score"].mean().reset_index()
@@ -91,7 +87,7 @@ df_filtrado['edad_tramo2'] = pd.cut(df_filtrado['edad_actual'], bins=bins2, labe
 
 
 df_filtrado.edad_actual.describe()
-score_age = df_filtrado[(df_filtrado["edad_actual"] < 100) & (df_filtrado["score"] > 0.76) ].groupby("edad_actual")["score"].mean().reset_index()
+score_age = df_filtrado[(df_filtrado["edad_actual"] < 100) & (df_filtrado["score"] > 0) ].groupby("edad_actual")["score"].mean().reset_index()
 
 np.corrcoef(score_age.edad_actual, score_age.score)
 
@@ -104,6 +100,10 @@ edad_tramo2 = df_filtrado.groupby("edad_tramo2")["score"].mean().reset_index()
 plt.plot(score_age_cut ['edad_actual'], score_age_cut ['score'], color='red')
 plt.plot(edad_tramo.edad_tramo, edad_tramo.score )
 plt.plot(edad_tramo2.edad_tramo2, edad_tramo2.score )
+
+# Guardar datos para graficar en R
+edad_tramo2.to_feather("tesis/cuadros_tesis/edad_tramo_score.feather")
+
 
 # Ver puntaje de las tendencias politicas
 score_tendency= df_filtrado.groupby("polo")["score"].mean()
@@ -167,21 +167,21 @@ stats.ttest_ind(df_filtrado[df_filtrado["sexo"] == "hombre"]["score"] ,
 
 df_filtrado['lower_names'] = df_filtrado["nombre"].str.lower()
 
-coloma_affective = df_filtrado[df_filtrado["lower_names"].str.contains("coloma")].sort_values("score", ascending = False)[["text", "score"]][0:10]
-coloma_cognitive= df_filtrado[df_filtrado["lower_names"].str.contains("coloma")].sort_values("score")[["text", "score"]][0:10]
-coloma_mean =  df_filtrado[df_filtrado["lower_names"].str.contains("coloma")]
+coloma_affective = df_filtrado[df_filtrado["lower_names"].str.contains("coloma", na=False)].sort_values("score", ascending = False)[["text", "score"]][0:10]
+coloma_cognitive= df_filtrado[df_filtrado["lower_names"].str.contains("coloma", na=False)].sort_values("score")[["text", "score"]][0:10]
+coloma_mean =  df_filtrado[df_filtrado["lower_names"].str.contains("coloma", na=False)]
 np.mean(coloma_mean.score)
 
 def get_most_affective(name, n = 10):
-    affective = df_filtrado[df_filtrado["lower_names"].str.contains(name)].sort_values("score", ascending = False)[["text", "score"]][0:n]
+    affective = df_filtrado[df_filtrado["lower_names"].str.contains(name, na=False)].sort_values("score", ascending = False)[["text", "score"]][0:n]
     return affective 
     
 def get_most_cognitive(name, n = 10):
-    cognitive = df_filtrado[df_filtrado["lower_names"].str.contains(name)].sort_values("score")[["text", "score"]][0:n]
+    cognitive = df_filtrado[df_filtrado["lower_names"].str.contains(name, na=False)].sort_values("score")[["text", "score"]][0:n]
     return cognitive
 
 def get_mean(name):
-    filtered =  df_filtrado[df_filtrado["lower_names"].str.contains(name)]
+    filtered =  df_filtrado[df_filtrado["lower_names"].str.contains(name, na=False)]
     return np.mean(filtered.score)
 
 
@@ -196,8 +196,10 @@ get_mean("coloma")
 ########################0
 
 # Indicador a lo largo del tiempo
-df_filtrado.groupby("anio")["score"].mean()
+by_year = df_filtrado.groupby("anio")["score"].mean().reset_index()
 
+
+plt.plot(by_year["anio"] , by_year["score"])
 
 # Evolución del indicador a lo largo del tiempo 
 score_tendency2[score_tendency2["anio"] < 2022].pivot(index='anio', columns='polo', values='score')
@@ -209,6 +211,9 @@ score_tendency_wide= score_tendency2[score_tendency2["anio"] < 2022].pivot(index
 # Moving average con 3 rezagos
 rolling = score_tendency_wide.rolling(window=3)
 rolling_mean = rolling.mean()
+
+# Guardar para visualizar en R
+rolling_mean.reset_index().to_feather("tesis/cuadros_tesis/score_rolling.feather")
 
 # Graficar las 3 tendencias a lo largo del tiempo
 fig, ax = plt.subplots()
@@ -237,6 +242,7 @@ media_anio = larga_duracion.groupby([ "edad_tramo2","nombre"]).agg(conteo =  ("s
                                                                    media = ("score", "mean")
                                                                    ).reset_index()
 
+
 moreira = media_anio[media_anio["nombre"] == "Iván Moreira Barros"]
 escalona = media_anio[media_anio["nombre"] == "Camilo Escalona Medina"]
 
@@ -260,14 +266,29 @@ plt.show()
 # Trabajar con tópicos #
 ########################
 
-df_test =  pd.read_feather("data/topics_test_paragraph.feather")
+# Este era el archivo que se abría originalmente
+#df_test =  pd.read_feather("data/topics_test_paragraph.feather")
+
+topics = pd.read_feather("data/predicted_topics.feather")
+
+topics = topics .rename(columns={"score_toic": "score_topic"})
+
+
+# Crear una tabla que contiene los tópicos. Se crea un objeto df_test para no alterar
+# lo que estaba hecho antes
+df_test = pd.merge(df_filtrado, topics[["id_phrase", "topic", "score_topic"]], on = "id_phrase" , how = "left")
 
 # Explorar cantidad de tópicos
-df_test.groupby("pole").size()
+df_test.groupby("polo").size()
 df_test .groupby("topic").size()  
 
+# Guardar para graficar en R
+df_test.to_feather("tesis/cuadros_tesis/topicos.feather")
+
+
 # Puntaje de cada tópico
-score_topic =  df_test[df_test["score_topic"] >= 0.7].groupby("topic")["score"].mean().reset_index()
+score_topic =  df_test[df_test["score_topic"] >= 0.2].groupby("topic")["score"].mean().reset_index()
+score_topic =  score_topic .groupby("topic")["score"].mean().reset_index()
 
 x = list(range(0, 11))
 
@@ -281,9 +302,10 @@ fig
 fig.show()
 
 # Revisar puntaje de cada tópico por cada polo político
-score_topic_pole =  df_test[df_test["score_topic"] >= 0.8].groupby(["topic", "pole"])["score"].mean().reset_index()
-izquierda = score_topic_pole [ (score_topic_pole ["pole"] == "izquierda")]
-derecha = score_topic_pole [ (score_topic_pole ["pole"] == "derecha")]
+score_topic_pole =  df_test[df_test["score_topic"] >= 0.8].groupby(["topic", "polo"])["score"].mean().reset_index()
+score_topic_pole =  score_topic_pole .groupby(["topic", "polo"])["score"].mean().reset_index()
+izquierda = score_topic_pole [ (score_topic_pole ["polo"] == "izquierda")]
+derecha = score_topic_pole [ (score_topic_pole ["polo"] == "derecha")]
 
 fig, ax = plt.subplots()
 ax.scatter(x, izquierda.score)
@@ -297,15 +319,15 @@ fig.show()
 
 
 # Revisar emocionalidad en cada uno de los tópicos
-emo_left =  df_test[df_test["pole"]== "izquierda"].groupby([ "topic"])["emotion"].mean().reset_index()
-emo_right=  df_test[df_test["pole"]== "derecha"].groupby([ "topic"])["emotion"].mean().reset_index()
+emo_left =  df_test[df_test["polo"]== "izquierda"].groupby([ "topic"])["cos_affect"].mean().reset_index()
+emo_right=  df_test[df_test["polo"]== "derecha"].groupby([ "topic"])["cos_affect"].mean().reset_index()
 
-emo_right.emotion / emo_left.emotion  
+emo_right.cos_affect / emo_left.cos_affect
 
 # Revisar tópicos a lo largo del tiempo
-topic_year =  df_test.groupby([ "topic", "year"])["score"].mean().reset_index()
+topic_year =  df_test.groupby([ "topic", "anio"])["score"].mean().reset_index()
 
-score_topic_wide= topic_year [topic_year ["year"] < 2022].pivot(index='year', columns='topic', values='score')
+score_topic_wide= topic_year [topic_year ["anio"] < 2022].pivot(index='anio', columns='topic', values='score')
 score_topic_wide = score_topic_wide[["cultura", "impuestos", "educación"]]
 
 # Moving average con 3 rezagos
@@ -324,7 +346,8 @@ fig.show()
 
 # Revisar tópicos
 topico = "educación"
-frases= df_test.sort_values(by = ["score_topic"], ascending = False)[df_test["topic"]==topico]
+
+
 
 
 #############
@@ -337,9 +360,8 @@ df_test.columns
 df_filtrado.columns
 
 # Add name 
-df_topics = pd.merge(df_test, df_filtrado[["id_phrase", "nombre"]], on='id_phrase')
-df_topics["name"] = df_topics["name"].str.lower()
-df_topics = df_topics.dropna()
+df_test["name"] = df_test["nombre"].str.lower()
+df_topics = df_test.dropna()
 
 
 # Editar el nombre que viene en la tabla nominate, para asegurar el match con la tabla que contiene los textos
@@ -368,24 +390,27 @@ df_topics["name"][df_topics["name"] == "jose antonio galilea vidaurre"] = "josé
 # Add nominate score
 nominate_year = nominate.groupby(["name", "year"])["coord1D"].mean().reset_index()
 df_topics ["name"] = df_topics ["name"].str.strip()
-df_topics ["year"] = df_topics ["year"].astype(int)
-df_topics = pd.merge(df_topics.reset_index(), nominate_year, on = ["name", "year"], how = "left")
-df_topics["nominate"] = abs(df_topics["coord1D"])
+df_topics ["anio"] = df_topics ["anio"].astype(int)
+df_topics = pd.merge(df_topics.reset_index(), nominate_year, left_on = ["name", "anio"],
+                     right_on = ["name", "year"],
+                     how = "left")
+df_topics["nominate"] = df_topics["coord1D"]
 
 
 # Hacer algunas comprobaciones
 df_topics[(df_topics.coord1D.isnull()) & (df_topics.year >= 2002) ].shape
 df_topics.dropna()[df_topics.year >= 2002].shape
 df_topics[df_topics.year >= 2002].shape
-not_matched = df_topics[(df_topics.coord1D.isnull()) & (df_topics.year >= 2002) ].groupby(["name", "year"], as_index = False).first()[["name", "year"]]
+not_matched = df_topics[(df_topics.coord1D.isnull()) & (df_topics.year >= 2002) ].groupby(["nombre", "anio"], as_index = False).first()[["nombre", "anio"]]
 nominate_year[nominate_year['name'].str.contains('sule')].groupby(["name", "year"] , as_index = False).first()[["name", "year", "coord1D"]]
+
 
 
 # Create variables
 bins= [25,35,45,55,65,75,85] 
 labels = ['25-34','35-44','45-54','55-64','65-74', "75-84"]
-df_topics['age_group'] = pd.cut(df_topics['age'], bins=bins, labels=labels, right=False)
-df_topics["age2"] = list(map(lambda x:x*x, df_topics["age"] ))
+df_topics['age_group'] = pd.cut(df_topics['edad_actual'], bins=bins, labels=labels, right=False)
+df_topics["age2"] = list(map(lambda x:x*x, df_topics["edad_actual"] ))
 
 
 df_topics["w2"] = list(map(lambda x:x*x, df_topics["nominate"] ))
@@ -408,50 +433,149 @@ def find_lastname(name, lastname_list):
     return 0
 
 
-lastnames = df_topics[["name"]].groupby("name").first().reset_index()
-lastnames["vasco"] = [find_lastname(n, vascos.lastname2.values) for n in lastnames.name]
-lastnames["aleman"] = [find_lastname(n, alemanes.lastname2.values) for n in lastnames.name]
-lastnames["ingles"] = [find_lastname(n, ingleses.lastname2.values) for n in lastnames.name]
-lastnames["italiano"] = [find_lastname(n, italianos.lastname2.values) for n in lastnames.name]
-
-df_topics = pd.merge(df_topics, lastnames, on='name')
+lastnames = df_topics[["nombre"]].groupby("nombre").first().reset_index()
+lastnames["vasco"] = [find_lastname(n, vascos.lastname2.values) for n in lastnames.nombre]
+lastnames["aleman"] = [find_lastname(n, alemanes.lastname2.values) for n in lastnames.nombre]
+lastnames["ingles"] = [find_lastname(n, ingleses.lastname2.values) for n in lastnames.nombre]
+lastnames["italiano"] = [find_lastname(n, italianos.lastname2.values) for n in lastnames.nombre]
 
 
+##### Recodificar variables
+bins= [25,45,70,90]
+labels = ['25-44','45-69','70-90']
+df_topics['edad_tramo2'] = pd.cut(df_topics['edad_actual'], bins=bins, labels=labels)
+df_topics["edad_tramo3"] = np.where(df_topics["edad_actual"] <= 75, 0, 1 )
 
+df_topics.groupby(['edad_tramo2'])['edad_tramo2'].count()
+df_topics.groupby(['edad_tramo3'])['edad_tramo3'].count()
+
+# Crear una variable que muestra el año de cada periodo parlamentario
+
+anio_periodo_recode     = {
     
+    '1965':'1',
+    '1966':'2',
+    '1967':'3',
+    '1968':'4',
+    '1969':'1',
+    '1970':'2',
+    '1971':'3',
+    '1972':'4',
+    '1973':'1',
+                        '1990':'1',
+                        '1991':'2',
+                        '1992':'3',
+                        '1993':'4',
+                        '1994':'1',
+                        '1995':'2',
+                        '1996':'3',
+                        '1997':'4',
+                        '1998':'1',
+                        '1999':'2',
+                        '2000':'3',
+                        '2001':'4',
+                        '2002':'1',
+                        '2003':'2',
+                        '2004':'3',
+                        '2005':'4',
+                        '2006':'1',
+                        '2007':'2',
+                        '2008':'3',
+                        '2009':'4',
+                        '2010':'1',
+                        '2011':'2',
+                        '2012':'3',
+                        '2013':'4',
+                        '2014':'1',
+                        '2015':'2',
+                        '2016':'3',
+                        '2017':'4',
+                        '2018':'1',
+                        '2019':'2',
+                        '2020':'3',
+                        '2021':'4',
+                        '2022':'1'                    
+                    }
+df_topics["anio_str"] = df_topics["anio"].astype(str)
+df_topics = df_topics.assign(anio_periodo = df_topics.anio_str.map(anio_periodo_recode))
 
+
+
+
+# Ya no haré nada con los apellidos
+#df_topics = pd.merge(df_topics, lastnames, on='nombre')
+
+df_topics.isna().sum()
+
+# =============================================================================
+# modelo1: años
+# modelo2: año-periodos
+# modelo3: año-periodo + predictadura
+# 
+# =============================================================================
+
+def model_to_csv(model, name):
+    model_df = pd.DataFrame({"coef": model.params , "pvalues": model.pvalues, "se" : model.bse })
+    model_df.reset_index(inplace=True)
+    model_df = model_df.rename(columns = {'index':'variable'})
+    model_df ['variable'] = model_df ['variable'].str.replace(',', '')
+    model_df["pvalues"] = ['{:f}'.format(i)  for i in  model_df["pvalues"]] 
+    obs = round(model.nobs)
+    model_df.to_csv("tesis/cuadros_tesis/{name}_{obs}.csv".format(name = name,  obs = obs))
 
 ##### Without nominate
+df_topics_no_nominate = df_topics.loc[:, ~df_topics.columns.isin(['nominate', "nominate_standard", 'coord1D', "w2", "w2_standard", "year", "anio_str"])].dropna() 
 
-df_topics_no_nominate = df_topics.loc[:, ~df_topics.columns.isin(['nominate', "nominate_standard", 'coord1D', "w2", "w2_standard"])].dropna() 
+df_topics_no_nominate ['role'].value_counts()
 
-# =============================================================================
-# model = smf.ols(formula="score_standard ~  C(age_group) + C(sex) + C(year) + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
-#                 data=df_topics_no_nominate   ).fit()
-# print(model.summary())
-# =============================================================================
-
-# full
-model_cluster = smf.ols(formula="score_standard ~  C(age_group) + C(sex) + C(year) + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",   #                
+# full: modelo con todos los datos disponibles. Son un poco más de 1.2 millones 
+model_cluster = smf.ols(formula="score_standard ~  C(age_group) + C(sexo, Treatment(reference='hombre')) + C(role)  + C(anio) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",   #                
                 data=df_topics_no_nominate   ).fit(cov_type='cluster',
-                    cov_kwds={'groups': df_topics_no_nominate   ['name']},
+                    cov_kwds={'groups': df_topics_no_nominate['name']},
                     use_t=True)
-print(model_cluster.summary())
+print(str(model_cluster.summary()))
 
-# no fixed year
-model_cluster = smf.ols(formula="score_standard ~  C(age_group)   + C(sex)  + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
-                data=df_topics_no_nominate   ).fit(cov_type='cluster',
-                    cov_kwds={'groups': df_topics_no_nominate   ['name']},
-                    use_t=True)
+model_to_csv(model_cluster, "modelo_sin_nominate1")
+del model_cluster
 
-print(model_cluster.summary())
-                            
-# no fixed topic
-model_cluster = smf.ols(formula="score_standard ~  C(age_group)  + C(sex) + C(year)  + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",   #                
+
+# modelo año-periodos sin predictadira
+model_cluster = smf.ols(formula="score_standard ~  C(age_group) + C(sexo, Treatment(reference='hombre')) + C(role)  + C(anio_periodo) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",   #                
                 data=df_topics_no_nominate   ).fit(cov_type='cluster',
-                    cov_kwds={'groups': df_topics_no_nominate   ['name']},
+                    cov_kwds={'groups': df_topics_no_nominate['name']},
                     use_t=True)
-print(model_cluster.summary())
+print(str(model_cluster.summary()))
+
+
+model_to_csv(model_cluster, "modelo_sin_nominate2")
+del model_cluster
+
+# modelo año-periodos con predictadira
+model_cluster = smf.ols(formula="score_standard ~  C(age_group) + C(sexo, Treatment(reference='hombre')) + C(role)  + C(anio_periodo) + C(predictadura) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",   #                
+                data=df_topics_no_nominate   ).fit(cov_type='cluster',
+                    cov_kwds={'groups': df_topics_no_nominate['name']},
+                    use_t=True)
+print(str(model_cluster.summary()))
+
+
+model_to_csv(model_cluster, "modelo_sin_nominate3")
+del model_clusters
+
+
+
+# modelo interacción cámara-año
+model_cluster = smf.ols(formula="score_standard ~  C(age_group) + C(sexo, Treatment(reference='hombre'))   + C(anio) *  C(role) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",   #                
+                data=df_topics_no_nominate   ).fit(cov_type='cluster',
+                    cov_kwds={'groups': df_topics_no_nominate['name']},
+                    use_t=True)
+print(str(model_cluster.summary()))
+model_to_csv(model_cluster, "modelo_sin_nominate4")
+
+del model_cluster
+
+
+
+
 
 
 
@@ -460,40 +584,35 @@ print(model_cluster.summary())
 
 df_topics_nominate = df_topics.dropna() 
 
-# =============================================================================
-# model_nominate = smf.ols(formula="score_standard ~  C(age_group) + C(sex) + C(year) + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
-#                 data=df_topics_nominate ).fit()
-# print(model_nominate .summary())
-# 
-# =============================================================================
+# Guardar archivo para agregar en el escrito de la tesis
+df_topics_nominate .to_csv("tesis/cuadros_tesis/nominate_topic.csv")
 
 
-# agruár edad en tres
-# graficar edad en el tiempo
-# agregr regresor senador 
+
 # paso intermedio: achicar la muestra con los mismos regresores
 
 # full
-model_cluster_nominate = smf.ols(formula="score_standard ~ w2_standard + C(age_group) + C(sex) + C(year) + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
+model_cluster_nominate = smf.ols(formula="score_standard ~ w2_standard + C(age_group) + C(sexo) + C(anio) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",                 
                 data=df_topics_nominate ).fit(cov_type='cluster',
                     cov_kwds={'groups': df_topics_nominate ['name']},
                     use_t=True)
 print(model_cluster_nominate.summary())
 
-# no fixed year
-model_cluster_nominate = smf.ols(formula="score_standard ~ w2_standard + C(age_group) + C(sex)  + C(topic, Treatment(reference='educación')) + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
+model_to_csv(model_cluster_nominate, "modelo_con_nominate1")
+del model_cluster_nominate
+
+
+
+# añps-periodo
+model_cluster_nominate = smf.ols(formula="score_standard ~ w2_standard + C(age_group) + C(sexo) + C(anio_periodo) + C(topic, Treatment(reference='educación')) + C(polo, Treatment(reference='derecha'))",                 
                 data=df_topics_nominate ).fit(cov_type='cluster',
                     cov_kwds={'groups': df_topics_nominate ['name']},
                     use_t=True)
+
 print(model_cluster_nominate.summary())
 
-# no fixed topic
-model_cluster_nominate = smf.ols(formula="score_standard ~ w2_standard + C(age_group) + C(sex) + C(year)  + C(pole, Treatment(reference='derecha')) + vasco + aleman + ingles",                 
-                data=df_topics_nominate ).fit(cov_type='cluster',
-                    cov_kwds={'groups': df_topics_nominate ['name']},
-                    use_t=True)
-print(model_cluster_nominate.summary())
-
+model_to_csv(model_cluster_nominate, "modelo_con_nominate2")
+del model_cluster_nominate
 
 
 
