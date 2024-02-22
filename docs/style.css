@@ -1,0 +1,37 @@
+.title {
+  font-size: 80px !important;
+}
+
+.subtitle {
+  font-size: 60px !important;
+  color: #74AEF0;
+}
+
+
+.center h1 {
+  text-align: center;
+}
+
+
+.paginate_button  {
+    min-width: 0.5em !important; 
+    padding: 0.1em .5em !important;
+    font-size: 20px;
+  
+}
+
+/*
+.dataTables_info {
+    min-width: 0.5em !important; 
+    padding: 0.1em .5em !important;
+    font-size: 30px;
+  
+}
+*/
+
+#DataTables_Table_0_info {
+    min-width: 0.5em !important; 
+    padding: 0.1em .5em !important;
+    font-size: 30px;
+
+}
