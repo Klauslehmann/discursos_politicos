@@ -1,0 +1,713 @@
+---
+title: "Tesis para optar al grado de magíster en análisis económico"
+subtitle: "Emocionalidad y cognición en discursos parlamentarios"
+format: 
+    revealjs:
+      auto-stretch: false
+      scrollable: true
+      link-external-newwindow: true
+      view-distance: 30
+fig-responsive: false
+css: style.css
+editor: source
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r cargar librerías}
+library(feather)
+library(dplyr)
+library(kableExtra)
+library(ggplot2)
+library(plotly)
+library(readr)
+library(stringr)
+library(data.table)
+library(DT)
+library(scales)
+library(ggrepel)
+library(purrr)
+library(forcats)
+```
+
+## Contenidos
+
+-   Motivación
+-   Datos
+-   Metodología
+-   Resultados
+
+## Motivación
+
+*An emotional speaker always makes his audience feel with him, even when there is nothing in his arguments; which is why many speakers try to overwhelm their audience by mere noise*
+
+- Aristóteles, La Retórica
+
+*In politics, when reason and emotion collide, emotion invariably wins*
+
+- Drew Westen, The Political Brain: The Role of Emotion in Deciding the Fate of the Nation
+
+## Motivación
+
+*He aquí el Bukele chileno, el comisario contra las lacras asquerosas que inundan de drogas a nuestros jóvenes, a quienes la izquierda tiene el desparpajo de defender. Su único derecho es podrirse en las cárceles*
+
+- Gaspar Rivas, 2022 
+
+# ¿Cuál es el rol de la emocionalidad en el proceso legislativo chileno? {.center background-color="aquamarine"}
+
+## Estudios relacionados
+
+::: panel-tabset
+## Contexto general
+
+Tradicionalmente, se ha utilizado NOMINATE (Poole y Rosenthal, 1983) para estudiar el comportamiento de los políticos
+
+Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2019; Osnabrügge, Hobolt, y Rodon 2021; Kosmidis et al. 2019) y audio (Dietrich, Hayes, y O'Brien 2019)
+
+## Hallazgos
+
+**Algunos hallazgos interesantes**:
+
+-   Disminución de la sofisticación lingüística en Reino Unido (Benoit, Munger, y Spirling 2019)
+
+-   Tendencia hacia un lenguaje más polarizante en EEUU (Jensen et al. 2012; Rheault y Cochrane 2020) y Reino Unido (Peterson y Spirling 2018; Goet 2019)
+
+-   Los temas en la discusión parlamentaria son abordados con distintos niveles de emocionalidad en EEUU (Gennaro y Ash, 2021)
+
+-   Políticos ubicados en los extremos ideológicos tienen mayor carga emotiva (Gennaro y Ash, 2021)
+:::
+
+# Fuentes de información
+
+## Discursos parlamentarios (Biblioteca Congreso Nacional)
+
+![](images/ejemplo-scraping-1.png){fig-align="center" width="900px" height="455px"}
+
+## Discursos parlamentarios (Biblioteca Congreso Nacional)
+
+![](images/ejemplo-scraping-2-cortada.png){fig-align="center" width="750px" height="450px"}
+
+## Intervenciones parlamentarias
+
+Se extrajeron todas las intervenciones entre 1965 y 2021
+
+```{r descripcion_datos}
+  
+intervenciones_anio <-  read_feather("../cuadros_tesis/intervenciones_anio.feather")
+cantidad_filas <-  read_feather("../cuadros_tesis/cantidad_filas.feather")
+
+# Poner puntos
+cantidad_filas_formato <- cantidad_filas %>% 
+  mutate(`cantidad de filas` = format(`cantidad de filas`, big.mark=".",  decimal.mark = ",", scientific=FALSE))
+
+
+# Intervenciones originales
+original_rows <-  cantidad_filas_formato %>% 
+  filter(filtro == "datos brutos") %>% 
+  pull()
+
+# Intervenciones luego del filtro
+filtered_rows <-  cantidad_filas_formato %>% 
+  filter(filtro == "datos filtrados") %>% 
+  pull()
+
+
+```
+
+```{r intervenciones_anio , fig.width=10,fig.height=3.5}
+plot <-  intervenciones_anio %>% 
+  filter(anio < 2022) %>% 
+  ggplot(aes(anio, n, color = "coral"), group = 1) +
+  geom_line() +
+  geom_vline(xintercept = 1973, linetype="dotted") +
+  geom_vline(xintercept = 1990, linetype="dotted") +
+  theme_bw() +
+  labs(y = "número intervenciones", 
+       x = "año"
+       ) +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        axis.text = element_text(size = 12)
+        )
+
+ggplotly(plot, tooltip = c("anio", "n")) %>% 
+   config(displayModeBar = F)
+  
+```
+
+. . .
+
+```{r tabla_pre_post_filtro}
+
+# Tabla cantidad filas antes y después del filtro
+tabla_n_filas <- cantidad_filas_formato %>% 
+  kbl(format = "html") %>% 
+  kable_styling(position = "center", font_size = 30) 
+
+tabla_n_filas
+```
+
+## Biografías parlamentarias (Biblioteca Congreso Nacional)
+
+::: r-stack
+![](images/biografia-1-cortada.png){.fragment .absolute top="200" left="0" width="900px"}
+
+![](images/biografia-2-cortada.png){.fragment .absolute bottom="40" right="0" width="450" height="500"}
+:::
+
+## Votaciones en Cámara
+
+::: panel-tabset
+## API
+
+![](images/api-camara.png){fig-align="center" width="900px" height="455px"}
+
+## Datos
+
+```{r votaciones_anio}
+votaciones_anio <- read_feather("../cuadros_tesis/votaciones_anio.feather")
+
+plot_votaciones <- votaciones_anio %>% 
+  filter(year < 2022) %>% 
+  ggplot(aes(x = year, y = n, color = "coral")) +
+  geom_line() +
+  labs(x = "año",
+       y = "frecuencia"       ) +
+  theme_bw() +
+  theme(legend.position = "none",
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.caption = element_text(hjust = 0),
+      axis.text = element_text(size = 12)
+      )
+
+n_votaciones <- sum(votaciones_anio$n) %>% 
+  format( big.mark=".", decimal.mark = ",", scientific=FALSE) 
+
+
+
+```
+
+Se obtuvieron `r n_votaciones` votaciones entre 2002 a 2022
+
+```{r plotear votaciones, fig.height=3.5}
+#ggplotly(plot_votaciones) %>% 
+#   config(displayModeBar = F)
+plot_votaciones
+```
+:::
+
+# Metodología
+
+## Word embeddings
+
+Cada palabra es representada como un vector de 100 dimensiones
+
+. . .
+
+La representación proviene de un entrenamiento (*FastText*) con mucho texto
+
+. . .
+
+```{r demostracion_pca, fig.height=3.1, fig.width=6, fig.align='center'}
+pca <- read_csv("../cuadros_tesis/pca_example.csv")
+variance_pca <- read_csv('../cuadros_tesis/pca_retained_variance.csv')
+
+# Varianza retenida por las 2 primeras componentes
+variance_pca2 <- variance_pca %>% 
+  mutate(varianza = round(varianza * 100, 1) )
+
+# Gráfico para demostrar la agrupación de palabras
+plot_pca <- pca %>% 
+  mutate(grupo = case_when(
+    word %in% c("perro", "conejo", "caballo", "mono") ~ "animal",
+    word %in% c("verde", "rojo", "azul", "amarillo") ~ "color",
+    word %in% c("pizza", "hamburguesa", "arroz") ~ "comida"
+  )) %>% 
+  ggplot(aes(d1, d2)) +
+  geom_point(color = "blue") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_text_repel(aes(label = word)) +
+  labs(x = paste0("componente 1   ", variance_pca2 %>% filter(componente == "componente1") %>% pull(varianza), "%") ,
+       y = paste0("componente 2   ", variance_pca2 %>% filter(componente == "componente2") %>% pull(varianza), "%")
+       ) 
+  
+plot_pca
+```
+
+## Diccionario LWIC
+
+El *Linguistic Inquiry and Word Count* (LWIC) contiene clasificaciones de palabras
+
+. . .
+
+Procesos psicológicos **afectivos** y **cognitivos**
+
+. . .
+
+amor = afectivo
+
+pensar = cognitivo
+
+## Búsqueda de embeddings
+
+Buscamos la representación para cada palabra (vector de 100 dimensiones)
+
+. . .
+
+Calculamos la media de cada polo (afectivo/cognitivo)
+
+. . .
+
+```{r ejemplo centroide}
+set.seed(12)
+reflexionar = runif(5, min = -1, max = 1)
+
+set.seed(1234)
+argumento = runif(5, min = -1, max = 1)
+
+```
+
+**reflexionar** = `r reflexionar`
+
+**argumento** = `r argumento`
+
+. . .
+
+```{r calcular media polo}
+polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
+
+```
+
+**polo_cognitivo** = `r polo_cognitivo`
+
+## Palabras en cada polo
+
+
+Similitud de cada palabra respecto al polo cognitivo y afectivo
+
+::: {layout-ncol=2}
+
+![Polo emotivo](images/wordcloud_affective.png)
+
+![Polo cognitivo](images/wordcloud_cognitive.png)
+
+:::
+
+
+
+## Preprocesamiento del texto
+
+
+```{r preparacion_descripcion_dataset}
+dataset_stats = read_csv("../cuadros_tesis/datasets_stats.csv")
+
+dataset_stats2 = dataset_stats %>% 
+  mutate_all(round, 2) %>% 
+  mutate_all(~format(., big.mark = ".", decimal.mark = ",", scientific = FALSE)) 
+
+names(dataset_stats2) <- c("total intervenciones", "total párrafos", "total palabras", 
+                           "párrafos/intervención",
+                           "palabras/intervención")
+
+parrafos <- dataset_stats2$`total párrafos`
+media_parrafos_intervencion <- dataset_stats2$`párrafos/intervención`
+media_palabras_intervencion <- dataset_stats2$`palabras/intervención`
+```
+
+
+```{r descripcion_dataset}
+dataset_stats2 %>% 
+  kbl(format = "html", caption = "Estadísticos de resumen") %>% 
+  kable_styling(position = "center", font_size = 25) 
+   
+
+
+```
+
+<br/>
+
+```{r ejemplo_preprocesamiento}
+preprocesamiento <-  read_csv("../cuadros_tesis/ejemplo_preprocesamiento.csv")
+
+preprocesamiento_tabla <- preprocesamiento %>% 
+  select(original, final) %>% 
+  kbl(format = "html") %>% 
+  column_spec(1:2, width = "15em", bold = TRUE, italic = TRUE) %>% 
+  kable_styling(position = "center", font_size = 25) 
+
+
+preprocesamiento_tabla
+
+```
+
+
+## Identificación de la polaridad
+
+Todos los textos son representados como un vector de 100 dimensiones
+
+. . .
+
+$$
+Y_i = \frac{sim(d_i, A) + b}{sim(d_i, C) + b}
+$$
+Entre mayor sea $Y_i$, más sesgo hacia el polo emotivo 
+
+Valores cercanos a 1 indican que no existe una polaridad marcada en el texto
+
+
+## Textos emotivos y cognitivos
+
+```{r seleccion textos, eval=FALSE}
+scores <- fread("../../data/score_filtered.csv", select = c("score", "cos_affect", "cos_cognitive", "text") )
+
+frases_cognitivas <-  scores %>% 
+  arrange(score) %>% 
+  select(text) %>% 
+  slice(1:200) %>% 
+  distinct() %>% 
+  mutate(text = str_remove_all(text, "\\\\n"))
+
+
+write_feather(frases_cognitivas, "tablas/textos_cognitivos.feather")
+
+
+frases_afectivas <- scores %>% 
+  arrange(desc(score) ) %>% 
+  select(text) %>% 
+  slice(1:200) %>% 
+  distinct() %>% 
+  mutate(text = str_remove_all(text, "\\\\n"))
+
+write_feather(frases_afectivas, "tablas/textos_afectivos.feather")
+
+```
+
+
+::: panel-tabset
+
+## Polo emotivo
+
+```{r textos emotivos}
+
+frases_afectivas <- read_feather("tablas/textos_afectivos.feather")
+
+DT::datatable(frases_afectivas, 
+              rownames = FALSE,
+              options = list(
+                 headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}"),
+              dom = "p",
+              displayStart = 2
+              )
+            ) %>% 
+    DT::formatStyle(columns = c(1), fontSize = '50%')
+
+
+```
+
+## Polo cognitivo 
+
+```{r textos cognitivos}
+
+frases_cognitivas <- read_feather("tablas/textos_cognitivos.feather")
+
+
+DT::datatable(frases_cognitivas, 
+              rownames = FALSE,
+              options = list(
+                 headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}"),
+              dom = "p"
+              )
+              ) %>% 
+      DT::formatStyle(columns = c(1), fontSize = '50%')
+
+
+```
+
+## Nubes
+
+
+::: {layout-ncol=2}
+
+![Polo emotivo](images/wordcloud_most_afective_phrases.png)
+
+![Polo cognitivo](images/wordcloud_most_cognitive_phrases.png)
+
+:::
+
+## scatter plot
+
+![1.000 textos más cognitivos y emotivos](images/polarity_scatter_plot.png){fig-align="center" width="600px" height="400px"}
+
+:::
+
+## Polarización con WNOMINATE
+
+
+```{r nominate}
+nominate_anios <- read_feather("../cuadros_tesis/nominate_years.feather")
+
+p_nominate <-  nominate_anios %>%
+  select(coord1D, party, year) %>%
+  arrange(coord1D) %>%
+  filter(!is.na(coord1D)) %>%
+  filter(party %in% c("PCS", "UDI", "RN", "PC", "PS", "PPD", "DC", "RD", "EVOP", "PREP", "PR")) %>%
+  group_by(party, year) %>%
+  mutate(coord1D = mean(coord1D)) %>%
+  slice(1) %>%
+  ungroup() %>%
+  filter(year %in%  c(2002, 2012, 2022) ) %>%
+  ggplot(aes(x =  reorder(party, coord1D ),  y = coord1D, color = party, label = party)) +
+  geom_point(size = 4) +
+  geom_text(hjust=1.5, vjust=0,  size=5) +
+  facet_wrap(~year, ncol = 3) +
+  coord_flip() +
+  labs(
+       y = "w-nominate",
+       x = "partido") + 
+  theme_bw() +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        text = element_text(size = 15)
+        )
+
+p_nominate
+```
+
+
+
+# Estadística descriptiva
+
+## Emocionalidad a lo largo del tiempo
+
+
+```{r score cámaras}
+score_senado <- arrow::read_feather("../cuadros_tesis/tabla_timeline_senadores.feather")
+score_diputado <- arrow::read_feather("../cuadros_tesis/tabla_timeline_diputados.feather")
+
+score_senado <- score_senado %>% 
+  mutate(camara = "senado")
+
+score_diputado <- score_diputado %>% 
+  mutate(camara = "diputado")
+
+ambas_camaras <- score_senado %>% 
+  bind_rows(score_diputado)
+
+plot_timeline_camaras <- ambas_camaras  %>% 
+  mutate(camara = if_else(camara == "diputado", "cámara", camara )) %>% 
+  ggplot(aes(x = mes, y = ma, group = camara, color = camara)) +
+  geom_line() +
+  scale_x_continuous(labels = date_format("%Y-%b", locale = "es_CL" ), breaks =  as.Date(c("1970-11-01", "1973-09-01", "1994-04-01", "1998-04-01", "2002-04-01", "2006-04-01", "2010-04-01", "2014-04-01", "2018-04-01", "2022-04-01"))) +
+  geom_vline(xintercept = as.Date( "1970-11-01"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1973-09-01"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1994-04-01"), linetype = "dotted", color = "black") +
+  geom_vline(xintercept = as.Date( "1998-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2002-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2006-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2010-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2014-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2018-04-01"), linetype = "dotted", color = "black") + 
+  geom_vline(xintercept = as.Date( "2022-04-01"), linetype = "dotted", color = "black") +
+  labs(x = "fecha", y = "cognición-emotividad") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 12),
+        legend.title = element_blank()
+  )
+
+ggplotly(plot_timeline_camaras, tooltip = c("x")) 
+```
+
+- Periodo 1965-1973 registra en promedio, un nivel más alto de emotividad que el periodo postdictadura
+- Caída durante el gobierno de Frei Montalva
+- Aumento los meses anteriores al golpe
+- Aumentos al inicio de los periodos parlamentarios
+- A partir de la década del dosmil hay una separaciónde ambas cámaras
+
+
+
+## Tópicos
+
+
+::: panel-tabset
+
+## General
+
+```{r topicos}
+topics <- arrow::read_feather("../cuadros_tesis/topicos.feather")
+
+topicos <-  topics %>% 
+  group_by(topic) %>% 
+  summarise(media = mean(score)) %>% 
+  filter( !is.na(topic)) 
+
+orden_topicos <- topicos %>% 
+  arrange(media) %>% 
+  pull(topic)
+  
+plot_topicos <-  topicos %>% 
+  ggplot(aes(x = reorder(topic, media) , y = media)) +
+  geom_point() +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text( size = 12, angle = 45, hjust=1),
+        axis.title.y = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+        axis.title.x = element_blank()
+        ) +
+  labs(y = "cognición-emocionalidad") 
+
+plot_topicos
+
+
+```
+
+## Según posición política
+
+```{r grafico polo topico}
+
+# Gráfico
+polo_topico <-  topics %>% 
+  group_by(polo, topic) %>% 
+  summarise(media = mean(score)) %>% 
+  ungroup() %>% 
+  filter(!is.na(polo) & !is.na(topic)) %>% 
+  mutate(topic = fct_relevel(topic, orden_topicos)) %>% 
+  ggplot(aes(x =  topic, y = media, color = polo)) +
+  geom_point() +
+  theme_bw() +
+  theme(axis.text.x = element_text( size = 12, angle = 45, hjust=1),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 12),
+        legend.title = element_blank(),
+      
+  ) +
+  labs(y = "cognición-emocionalidad") 
+
+polo_topico
+```
+
+:::
+
+
+## Posicionamiento y emotividad
+
+
+```{r plot nominate score}
+
+nominate <- read_csv("../cuadros_tesis/nominate_topic.csv")
+
+nominate <- nominate %>% 
+  mutate(bin = cut(coord1D, breaks= seq(-1, 1.1, 0.1) ),
+         polo_nominate = if_else(coord1D < 0, "izquierda", "derecha")
+         ) 
+
+bins <- nominate %>%
+  filter(!is.na(topic)) %>% 
+  group_by(bin) %>% 
+  summarise(score = mean(score))
+
+
+plot_nominate_score <- bins %>% 
+  ggplot(aes(x = bin, y = score, group = 1)) +
+  geom_line() +
+  labs(y = "cognición-emocionalidad",
+       x = "WNOMINATE"
+       ) +
+  theme_bw() +
+  theme(
+        axis.text.x = element_text(size = 12, angle = 90),
+        axis.text.y = element_text(size = 10),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.caption = element_text(hjust = 0),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+        
+  )
+
+plot_nominate_score
+```
+
+
+# Resultados
+
+## Modelo sin NOMINATE
+
+![](images/regresion-sin-nominate.png){fig-align="center" width="466px" height="800px"}
+
+
+## Modelo con NOMINATE
+
+![](images/regresion-con-nominate.png){fig-align="center" width="466px" height="800px"}
+
+## Comentarios finales
+
+::: panel-tabset
+
+## Limitaciones
+
+- Identificación de tópicos debería contemplar más categorías
+
+- No se cuenta con votaciones de diputados para todo el periodo
+
+- No se cuenta votaciones de senadores
+
+- Se cuenta con pocos datos para el periodo anterior a 1973
+
+## Hallazgos
+
+- La polarización ideológica está relacionada con el uso de lenguaje emotivo
+
+- No se encuentra exactamente la relación en forma de U entre posición ideológica y emotividad, identificada por Gennaro y Ash (2021) 
+
+- Los temas legislativos son tratados con diferentes niveles de emotividad
+
+- Existe una relación entre los ciclos parlamentarios y la emotividad de las intervenciones
+
+- El proceso político está influido por una dimensión emotiva
+
+## Caminos posibles
+
+- Etiquetar datos y usar un enfoque de *machine learning*
+
+- Probar otros tipos de preprocesamiento de texto
+
+- Actualizar el diccionario LWIC 
+
+:::
+
+
+
+
+
