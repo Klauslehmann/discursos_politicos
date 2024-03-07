@@ -55,7 +55,7 @@ library(forcats)
 
 - Gaspar Rivas, 2022 
 
-# ¿Cuál es el rol de la emocionalidad en el proceso legislativo chileno? {.center background-color="aquamarine"}
+# ¿Cómo ha evolucionado el discurso político en Chile? ¿Se ha vuelto más emotivo o más racional? {.center background-color="aquamarine"}
 
 ## Estudios relacionados
 
@@ -66,9 +66,7 @@ Tradicionalmente, se ha utilizado NOMINATE (Poole y Rosenthal, 1983) para estudi
 
 Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2019; Osnabrügge, Hobolt, y Rodon 2021; Kosmidis et al. 2019) y audio (Dietrich, Hayes, y O'Brien 2019)
 
-## Hallazgos
-
-**Algunos hallazgos interesantes**:
+## Hallazgos internacionales
 
 -   Disminución de la sofisticación lingüística en Reino Unido (Benoit, Munger, y Spirling 2019)
 
@@ -77,6 +75,22 @@ Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2
 -   Los temas en la discusión parlamentaria son abordados con distintos niveles de emocionalidad en EEUU (Gennaro y Ash, 2021)
 
 -   Políticos ubicados en los extremos ideológicos tienen mayor carga emotiva (Gennaro y Ash, 2021)
+
+
+## Hallazgos en Chile
+
+- Estudios de comportamiento político basados en votaciones en sala (NOMINATE)
+
+- Cooperación entre partidos se debilita a fines de los sesenta y se recompone desde 1990 (Alemán, 2009)
+
+- Entre 1997 y 2000 las coaliciones votan de manera cohesionada en la Cámara de Diputados. Se debilita el centro político  (Saiegh y Alemán, 2007)
+
+- Los proyectos de ley exitosos presentan una mayor colaboración entre coaliciones, en comparación con el total de los trámites legislativos, para el periodo 2007-2017 (Le Foulon, 2020)
+
+- En la etapa inicial de los proyectos hay menos restricciones políticas, lo cual facilita la cooperación entre posturas ideológicas distantes (Alemán, 2008). 
+
+- Después de la Convención Constitucional se produce un aumento de la polarización y un debilitamiento del centro (Mascareño et al., 2022 )
+
 :::
 
 # Fuentes de información
@@ -456,7 +470,7 @@ DT::datatable(frases_cognitivas,
 ## Polarización con WNOMINATE
 
 
-```{r nominate}
+```{r nominate, fig.width=14}
 nominate_anios <- read_feather("../cuadros_tesis/nominate_years.feather")
 
 p_nominate <-  nominate_anios %>%
@@ -471,18 +485,18 @@ p_nominate <-  nominate_anios %>%
   filter(year %in%  c(2002, 2012, 2022) ) %>%
   ggplot(aes(x =  reorder(party, coord1D ),  y = coord1D, color = party, label = party)) +
   geom_point(size = 4) +
-  geom_text(hjust=1.5, vjust=0,  size=5) +
+  geom_text(hjust=1, vjust=0,  size=5) +
   facet_wrap(~year, ncol = 3) +
   coord_flip() +
   labs(
-       y = "w-nominate",
-       x = "partido") + 
+       y = "w-nominate") + 
   theme_bw() +
   theme(legend.position = "none",
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
-        text = element_text(size = 15)
+        text = element_text(size = 15),
+        axis.title.y = element_blank()
         )
 
 p_nominate
