@@ -1,6 +1,6 @@
 ---
 title: "Tesis para optar al grado de magíster en análisis económico"
-subtitle: "Emocionalidad y cognición en discursos parlamentarios"
+subtitle: "Emotividad y cognición en discursos parlamentarios"
 format: 
     revealjs:
       auto-stretch: false
