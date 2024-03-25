@@ -1,6 +1,6 @@
 ---
 title: "Tesis para optar al grado de magíster en análisis económico"
-subtitle: "Emotividad y cognición en discursos parlamentarios"
+subtitle: "Emotividad y polarización política en discursos parlamentarios chilenos: 1965 a 2022"
 format: 
     revealjs:
       auto-stretch: false
@@ -55,7 +55,7 @@ library(forcats)
 
 - Gaspar Rivas, 2022 
 
-# ¿Cómo ha evolucionado el discurso político en Chile? ¿Se ha vuelto más emotivo o más racional? {.center background-color="aquamarine"}
+# ¿Cómo ha evolucionado el discurso parlamentario en Chile? ¿Se ha vuelto más emotivo o más racional?  {.center background-color="aquamarine"}
 
 ## Estudios relacionados
 
