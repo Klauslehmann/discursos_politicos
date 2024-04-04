@@ -7,6 +7,8 @@ format:
       scrollable: true
       link-external-newwindow: true
       view-distance: 30
+      slide-number: true
+      chalkboard: true
 fig-responsive: false
 css: style.css
 editor: source
@@ -15,6 +17,9 @@ execute:
   warning: false
   message: false
 ---
+
+
+
 
 ```{r cargar librerías}
 library(feather)
@@ -30,6 +35,7 @@ library(scales)
 library(ggrepel)
 library(purrr)
 library(forcats)
+library(readr)
 ```
 
 ## Contenidos
@@ -79,15 +85,11 @@ Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2
 
 ## Hallazgos en Chile
 
-- Estudios de comportamiento político basados en votaciones en sala (NOMINATE)
-
 - Cooperación entre partidos se debilita a fines de los sesenta y se recompone desde 1990 (Alemán, 2009)
 
 - Entre 1997 y 2000 las coaliciones votan de manera cohesionada en la Cámara de Diputados. Se debilita el centro político  (Saiegh y Alemán, 2007)
 
-- Los proyectos de ley exitosos presentan una mayor colaboración entre coaliciones, en comparación con el total de los trámites legislativos, para el periodo 2007-2017 (Le Foulon, 2020)
-
-- En la etapa inicial de los proyectos hay menos restricciones políticas, lo cual facilita la cooperación entre posturas ideológicas distantes (Alemán, 2008). 
+- Los proyectos de ley exitosos presentan una mayor colaboración entre coaliciones en el periodo 2007-2017 (Le Foulon, 2020)
 
 - Después de la Convención Constitucional se produce un aumento de la polarización y un debilitamiento del centro (Mascareño et al., 2022 )
 
@@ -219,14 +221,15 @@ plot_votaciones
 
 ## Word embeddings
 
-Cada palabra es representada como un vector de 100 dimensiones
+Cada palabra es representada por un vector de 100 dimensiones
 
-. . .
+:::: {.columns}
 
-La representación proviene de un entrenamiento (*FastText*) con mucho texto
+::: {.column width="50%"}
+![](images/word-embeddings.png){fig-align="center" width="600px"}
+:::
 
-. . .
-
+::: {.column width="50%"}
 ```{r demostracion_pca, fig.height=3.1, fig.width=6, fig.align='center'}
 pca <- read_csv("../cuadros_tesis/pca_example.csv")
 variance_pca <- read_csv('../cuadros_tesis/pca_retained_variance.csv')
@@ -255,6 +258,15 @@ plot_pca <- pca %>%
 plot_pca
 ```
 
+:::
+
+::::
+
+
+
+
+
+
 ## Diccionario LWIC
 
 El *Linguistic Inquiry and Word Count* (LWIC) contiene clasificaciones de palabras
@@ -269,54 +281,29 @@ amor = afectivo
 
 pensar = cognitivo
 
-## Búsqueda de embeddings
-
-Buscamos la representación para cada palabra (vector de 100 dimensiones)
 
 . . .
 
-Calculamos la media de cada polo (afectivo/cognitivo)
+**Seguimos estos pasos**
 
-. . .
+:::{.incremental}
 
-```{r ejemplo centroide}
-set.seed(12)
-reflexionar = runif(5, min = -1, max = 1)
+- Se convierten las palabras del dicionario en vectores 
 
-set.seed(1234)
-argumento = runif(5, min = -1, max = 1)
+- Calculamos un vector medio (centroide) para cada polo
 
-```
-
-**reflexionar** = `r reflexionar`
-
-**argumento** = `r argumento`
-
-. . .
-
-```{r calcular media polo}
-polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
-
-```
-
-**polo_cognitivo** = `r polo_cognitivo`
-
-## Palabras en cada polo
-
-
-Similitud de cada palabra respecto al polo cognitivo y afectivo
-
-::: {layout-ncol=2}
-
-![Polo emotivo](images/wordcloud_affective.png)
-
-![Polo cognitivo](images/wordcloud_cognitive.png)
+- vectores $A$ y $C$
 
 :::
 
 
 
-## Preprocesamiento del texto
+. . .
+
+
+
+
+## Identificación de la polaridad
 
 
 ```{r preparacion_descripcion_dataset}
@@ -345,24 +332,8 @@ dataset_stats2 %>%
 
 ```
 
-<br/>
 
-```{r ejemplo_preprocesamiento}
-preprocesamiento <-  read_csv("../cuadros_tesis/ejemplo_preprocesamiento.csv")
-
-preprocesamiento_tabla <- preprocesamiento %>% 
-  select(original, final) %>% 
-  kbl(format = "html") %>% 
-  column_spec(1:2, width = "15em", bold = TRUE, italic = TRUE) %>% 
-  kable_styling(position = "center", font_size = 25) 
-
-
-preprocesamiento_tabla
-
-```
-
-
-## Identificación de la polaridad
+. . .
 
 Todos los textos son representados como un vector de 100 dimensiones
 
@@ -373,7 +344,7 @@ Y_i = \frac{sim(d_i, A) + b}{sim(d_i, C) + b}
 $$
 Entre mayor sea $Y_i$, más sesgo hacia el polo emotivo 
 
-Valores cercanos a 1 indican que no existe una polaridad marcada en el texto
+
 
 
 ## Textos emotivos y cognitivos
@@ -449,17 +420,6 @@ DT::datatable(frases_cognitivas,
 
 
 ```
-
-## Nubes
-
-
-::: {layout-ncol=2}
-
-![Polo emotivo](images/wordcloud_most_afective_phrases.png)
-
-![Polo cognitivo](images/wordcloud_most_cognitive_phrases.png)
-
-:::
 
 ## scatter plot
 
@@ -713,15 +673,140 @@ plot_nominate_score
 
 ## Caminos posibles
 
-- Etiquetar datos y usar un enfoque de *machine learning*
+- Etiquetar datos y usar un enfoque supervisado
 
 - Probar otros tipos de preprocesamiento de texto
 
 - Actualizar el diccionario LWIC 
+
+## Datos
+
+Los datos están disponibles en una base de datos mysql
+
+Se pueden explorar en el siguiente sitio
+
+www.librosycodigo.com
+
+
+
+
+:::
+
+
+
+# ANEXOS
+
+
+## Preprocesamiento del texto {visibility="uncounted"}
+
+
+```{r preparacion_descripcion_dataset_reserva}
+dataset_stats = read_csv("../cuadros_tesis/datasets_stats.csv")
+
+dataset_stats2 = dataset_stats %>% 
+  mutate_all(round, 2) %>% 
+  mutate_all(~format(., big.mark = ".", decimal.mark = ",", scientific = FALSE)) 
+
+names(dataset_stats2) <- c("total intervenciones", "total párrafos", "total palabras", 
+                           "párrafos/intervención",
+                           "palabras/intervención")
+
+parrafos <- dataset_stats2$`total párrafos`
+media_parrafos_intervencion <- dataset_stats2$`párrafos/intervención`
+media_palabras_intervencion <- dataset_stats2$`palabras/intervención`
+```
+
+
+```{r descripcion_dataset_reserva}
+dataset_stats2 %>% 
+  kbl(format = "html", caption = "Estadísticos de resumen") %>% 
+  kable_styling(position = "center", font_size = 25) 
+   
+
+
+```
+
+<br/>
+
+```{r ejemplo_preprocesamiento}
+preprocesamiento <-  read_csv("../cuadros_tesis/ejemplo_preprocesamiento.csv")
+
+preprocesamiento_tabla <- preprocesamiento %>% 
+  select(original, final) %>% 
+  kbl(format = "html") %>% 
+  column_spec(1:2, width = "15em", bold = TRUE, italic = TRUE) %>% 
+  kable_styling(position = "center", font_size = 25) 
+
+
+preprocesamiento_tabla
+
+```
+
+
+
+## Palabras en cada polo  {visibility="uncounted"}
+
+
+Similitud de cada palabra respecto al polo cognitivo y afectivo
+
+::: {layout-ncol=2}
+
+![Polo emotivo](images/wordcloud_affective.png)
+
+![Polo cognitivo](images/wordcloud_cognitive.png)
 
 :::
 
 
 
 
+## Nubes {visibility="uncounted"}
+
+
+::: {layout-ncol=2}
+
+![Polo emotivo](images/wordcloud_most_afective_phrases.png)
+
+![Polo cognitivo](images/wordcloud_most_cognitive_phrases.png)
+
+:::
+
+## Búsqueda de embeddings {visibility="uncounted"}
+
+
+Buscamos la representación para cada palabra (vector de 100 dimensiones)
+
+. . .
+
+Calculamos la media de cada polo (afectivo/cognitivo)
+
+. . .
+
+```{r ejemplo centroide}
+set.seed(12)
+reflexionar = runif(5, min = -1, max = 1)
+
+set.seed(1234)
+argumento = runif(5, min = -1, max = 1)
+
+```
+
+**reflexionar** = `r reflexionar`
+
+**argumento** = `r argumento`
+
+. . .
+
+```{r calcular media polo}
+polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
+
+```
+
+**polo_cognitivo** = `r polo_cognitivo`
+
+## Motivación {visibility="uncounted"}
+
+*An emotional speaker always makes his audience feel with him, even when there is nothing in his arguments; which is why many speakers try to overwhelm their audience by mere noise*
+
+- Aristóteles, La Retórica
 
