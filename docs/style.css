@@ -35,3 +35,68 @@
     font-size: 30px;
 
 }
+
+reveal p, .reveal .slides section, .reveal .slides section>section {
+    font-size: 35px;
+}
+
+
+h2 {
+  font-size: 55px !important;
+  background-color: #200a80;
+  color: white !important;
+  padding-left: 10px;
+}
+
+
+
+/*
+body > div.reveal.focused.has-vertical-slides.has-horizontal-slides.ready.none > div.slides {
+  border: 6px solid #200a80 !important;
+  padding:  5px;
+}
+*/
+
+#section {
+  border: 8px solid #063175 !important;
+  padding-right:  10px;
+  padding-left:  10px;
+
+}
+
+/*
+body > div.reveal.focused.has-vertical-slides.has-horizontal-slides.ready.none > div.slides > section.slide.level2.present > .frame {
+  border: 6px solid blue !important;
+  padding-right:  10px;
+  padding-left:  10px;
+
+}
+*/
+.big-par { /*párrafo grande */
+  font-size: 60px !important;
+}
+
+
+.medium-par { /*párrafo grande */
+  font-size: 35px;
+}
+
+.small-par-right {
+  font-size:25px;
+  text-align: right;
+}
+
+.small-par-right {
+  font-size:25px;
+  text-align: left;
+}
+
+
+.center-justified {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: justify;
+  text-justify: auto;  
+  text-align-last: center;
+}

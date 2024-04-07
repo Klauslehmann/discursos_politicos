@@ -1,8 +1,12 @@
 ---
-title: "Tesis para optar al grado de magíster en análisis económico"
-subtitle: "Emotividad y polarización política en discursos parlamentarios chilenos: 1965 a 2022"
+#title: "Tesis para optar al grado de magíster en análisis económico"
+#subtitle: |
+#   |  Emotividad y polarización política en discursos parlamentarios chilenos:
+#   | 1965 a 2022      
 format: 
     revealjs:
+      width: 1100
+      #theme: simple
       auto-stretch: false
       scrollable: true
       link-external-newwindow: true
@@ -17,9 +21,6 @@ execute:
   warning: false
   message: false
 ---
-
-
-
 
 ```{r cargar librerías}
 library(feather)
@@ -38,6 +39,22 @@ library(forcats)
 library(readr)
 ```
 
+#
+
+<br>
+<br>
+
+
+[**Tesis para optar al grado de magíster en análisis económico**]{.big-par .center-justified}
+
+[**Emotividad y polarización política en discursos parlamentarios chilenos:**]{.medium-par .center-justified}
+[**1965 a 2022**]{.medium-par .center-justified}
+
+
+![](images/portada.png){fig-align="center" width="300px" fig-align="center"}
+
+
+
 ## Contenidos
 
 -   Motivación
@@ -47,32 +64,35 @@ library(readr)
 
 ## Motivación
 
-*An emotional speaker always makes his audience feel with him, even when there is nothing in his arguments; which is why many speakers try to overwhelm their audience by mere noise*
-
-- Aristóteles, La Retórica
-
 *In politics, when reason and emotion collide, emotion invariably wins*
 
-- Drew Westen, The Political Brain: The Role of Emotion in Deciding the Fate of the Nation
+-   Drew Westen (2008)
 
 ## Motivación
 
 *He aquí el Bukele chileno, el comisario contra las lacras asquerosas que inundan de drogas a nuestros jóvenes, a quienes la izquierda tiene el desparpajo de defender. Su único derecho es podrirse en las cárceles*
 
-- Gaspar Rivas, 2022 
+-   Gaspar Rivas, 2022
 
-# ¿Cómo ha evolucionado el discurso parlamentario en Chile? ¿Se ha vuelto más emotivo o más racional?  {.center background-color="aquamarine"}
+# ¿Cómo ha evolucionado el discurso parlamentario en Chile? ¿Se ha vuelto más emotivo o más racional? {.center}
 
 ## Estudios relacionados
 
 ::: panel-tabset
 ## Contexto general
 
-Tradicionalmente, se ha utilizado NOMINATE (Poole y Rosenthal, 1983) para estudiar el comportamiento de los políticos
 
-Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2019; Osnabrügge, Hobolt, y Rodon 2021; Kosmidis et al. 2019) y audio (Dietrich, Hayes, y O'Brien 2019)
+:::{.incremental}
+
+- Tradicionalmente, se ha utilizado NOMINATE (Poole y Rosenthal, 1983) para estudiar el comportamiento de los políticos
+
+- Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2019; Osnabrügge, Hobolt, y Rodon 2021; Kosmidis et al. 2019) y audio (Dietrich, Hayes, y O'Brien 2019)
+
+:::
 
 ## Hallazgos internacionales
+:::{.incremental}
+
 
 -   Disminución de la sofisticación lingüística en Reino Unido (Benoit, Munger, y Spirling 2019)
 
@@ -82,26 +102,31 @@ Desde aproximadamente 2010 aparecen estudios que utilizan datos de texto (Goet 2
 
 -   Políticos ubicados en los extremos ideológicos tienen mayor carga emotiva (Gennaro y Ash, 2021)
 
+:::
 
 ## Hallazgos en Chile
 
-- Cooperación entre partidos se debilita a fines de los sesenta y se recompone desde 1990 (Alemán, 2009)
+:::{.incremental}
 
-- Entre 1997 y 2000 las coaliciones votan de manera cohesionada en la Cámara de Diputados. Se debilita el centro político  (Saiegh y Alemán, 2007)
 
-- Los proyectos de ley exitosos presentan una mayor colaboración entre coaliciones en el periodo 2007-2017 (Le Foulon, 2020)
+-   Cooperación entre partidos se debilita a fines de los sesenta y se recompone desde 1990 (Alemán, 2009)
 
-- Después de la Convención Constitucional se produce un aumento de la polarización y un debilitamiento del centro (Mascareño et al., 2022 )
+-   Entre 1997 y 2000 las coaliciones votan de manera cohesionada en la Cámara de Diputados. Se debilita el centro político (Saiegh y Alemán, 2007)
+
+-   Los proyectos de ley exitosos presentan una mayor colaboración entre coaliciones en el periodo 2007-2017 (Le Foulon, 2020)
+
+-   Después de la Convención Constitucional se produce un aumento de la polarización y un debilitamiento del centro (Mascareño et al., 2022 )
+:::
 
 :::
 
 # Fuentes de información
 
-## Discursos parlamentarios (Biblioteca Congreso Nacional)
+## Discursos parlamentarios
 
 ![](images/ejemplo-scraping-1.png){fig-align="center" width="900px" height="455px"}
 
-## Discursos parlamentarios (Biblioteca Congreso Nacional)
+## Discursos parlamentarios
 
 ![](images/ejemplo-scraping-2-cortada.png){fig-align="center" width="750px" height="450px"}
 
@@ -144,7 +169,7 @@ plot <-  intervenciones_anio %>%
        x = "año"
        ) +
   theme(legend.position = "none",
-        panel.grid.minor = element_blank(),
+        #panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
         axis.text = element_text(size = 12)
@@ -167,7 +192,7 @@ tabla_n_filas <- cantidad_filas_formato %>%
 tabla_n_filas
 ```
 
-## Biografías parlamentarias (Biblioteca Congreso Nacional)
+## Biografías parlamentarias
 
 ::: r-stack
 ![](images/biografia-1-cortada.png){.fragment .absolute top="200" left="0" width="900px"}
@@ -180,7 +205,7 @@ tabla_n_filas
 ::: panel-tabset
 ## API
 
-![](images/api-camara.png){fig-align="center" width="900px" height="455px"}
+![](images/api-camara.png){fig-align="center" width="900px" height="450px"}
 
 ## Datos
 
@@ -223,9 +248,10 @@ plot_votaciones
 
 Cada palabra es representada por un vector de 100 dimensiones
 
-:::: {.columns}
+::: columns
 
 ::: {.column width="50%"}
+
 ![](images/word-embeddings.png){fig-align="center" width="600px"}
 :::
 
@@ -257,54 +283,38 @@ plot_pca <- pca %>%
   
 plot_pca
 ```
-
+:::
 :::
 
-::::
+## Diccionario LIWIC
 
-
-
-
-
-
-## Diccionario LWIC
-
-El *Linguistic Inquiry and Word Count* (LWIC) contiene clasificaciones de palabras
+El *Linguistic Inquiry and Word Count* (LIWIC) contiene clasificaciones de palabras
 
 . . .
 
-Procesos psicológicos **afectivos** y **cognitivos**
+Procesos psicológicos **emotivos** y **cognitivos**
 
 . . .
 
-amor = afectivo
+amor = emotivo
 
 pensar = cognitivo
-
 
 . . .
 
 **Seguimos estos pasos**
 
-:::{.incremental}
+::: incremental
+-   Se convierten las palabras del dicionario en vectores
 
-- Se convierten las palabras del dicionario en vectores 
+-   Calculamos un vector medio (centroide) para cada polo
 
-- Calculamos un vector medio (centroide) para cada polo
-
-- vectores $A$ y $C$
-
+-   vectores $E$ y $C$
 :::
-
-
 
 . . .
 
-
-
-
 ## Identificación de la polaridad
-
 
 ```{r preparacion_descripcion_dataset}
 dataset_stats = read_csv("../cuadros_tesis/datasets_stats.csv")
@@ -322,7 +332,6 @@ media_parrafos_intervencion <- dataset_stats2$`párrafos/intervención`
 media_palabras_intervencion <- dataset_stats2$`palabras/intervención`
 ```
 
-
 ```{r descripcion_dataset}
 dataset_stats2 %>% 
   kbl(format = "html", caption = "Estadísticos de resumen") %>% 
@@ -332,20 +341,17 @@ dataset_stats2 %>%
 
 ```
 
-
 . . .
+
+<br>
 
 Todos los textos son representados como un vector de 100 dimensiones
 
 . . .
 
 $$
-Y_i = \frac{sim(d_i, A) + b}{sim(d_i, C) + b}
-$$
-Entre mayor sea $Y_i$, más sesgo hacia el polo emotivo 
-
-
-
+Y_i = \frac{sim(d_i, E) + b}{sim(d_i, C) + b}
+$$ Entre mayor sea $Y_i$, más sesgo hacia el polo emotivo
 
 ## Textos emotivos y cognitivos
 
@@ -374,9 +380,7 @@ write_feather(frases_afectivas, "tablas/textos_afectivos.feather")
 
 ```
 
-
 ::: panel-tabset
-
 ## Polo emotivo
 
 ```{r textos emotivos}
@@ -399,7 +403,7 @@ DT::datatable(frases_afectivas,
 
 ```
 
-## Polo cognitivo 
+## Polo cognitivo
 
 ```{r textos cognitivos}
 
@@ -424,11 +428,9 @@ DT::datatable(frases_cognitivas,
 ## scatter plot
 
 ![1.000 textos más cognitivos y emotivos](images/polarity_scatter_plot.png){fig-align="center" width="600px" height="400px"}
-
 :::
 
 ## Polarización con WNOMINATE
-
 
 ```{r nominate, fig.width=14}
 nominate_anios <- read_feather("../cuadros_tesis/nominate_years.feather")
@@ -452,8 +454,8 @@ p_nominate <-  nominate_anios %>%
        y = "w-nominate") + 
   theme_bw() +
   theme(legend.position = "none",
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
+        #panel.grid.minor = element_blank(),
+        #panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
         text = element_text(size = 15),
         axis.title.y = element_blank()
@@ -462,12 +464,9 @@ p_nominate <-  nominate_anios %>%
 p_nominate
 ```
 
-
-
 # Estadística descriptiva
 
 ## Emocionalidad a lo largo del tiempo
-
 
 ```{r score cámaras}
 score_senado <- arrow::read_feather("../cuadros_tesis/tabla_timeline_senadores.feather")
@@ -497,7 +496,7 @@ plot_timeline_camaras <- ambas_camaras  %>%
   geom_vline(xintercept = as.Date( "2014-04-01"), linetype = "dotted", color = "black") + 
   geom_vline(xintercept = as.Date( "2018-04-01"), linetype = "dotted", color = "black") + 
   geom_vline(xintercept = as.Date( "2022-04-01"), linetype = "dotted", color = "black") +
-  labs(x = "fecha", y = "cognición-emotividad") +
+  labs(x = "fecha", y = "emotividad/cognición") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, size = 10),
         axis.text.y = element_text(size = 10),
@@ -512,22 +511,12 @@ plot_timeline_camaras <- ambas_camaras  %>%
 ggplotly(plot_timeline_camaras, tooltip = c("x")) 
 ```
 
-- Periodo 1965-1973 registra en promedio, un nivel más alto de emotividad que el periodo postdictadura
-- Caída durante el gobierno de Frei Montalva
-- Aumento los meses anteriores al golpe
-- Aumentos al inicio de los periodos parlamentarios
-- A partir de la década del dosmil hay una separaciónde ambas cámaras
-
-
-
 ## Tópicos
 
-
 ::: panel-tabset
-
 ## General
 
-```{r topicos}
+```{r topicos, fig.height=4.5}
 topics <- arrow::read_feather("../cuadros_tesis/topicos.feather")
 
 topicos <-  topics %>% 
@@ -540,21 +529,24 @@ orden_topicos <- topicos %>%
   pull(topic)
   
 plot_topicos <-  topicos %>% 
-  ggplot(aes(x = reorder(topic, media) , y = media)) +
+  ggplot(aes(x = reorder(topic, media) , y = media, color = topic) ) +
   geom_point() +
+  labs(title = "Promedio del indicador de emocionalidad, según tópico") +
   theme_bw() +
   theme(
         axis.text.y = element_text(size = 10),
         axis.text.x = element_text( size = 12, angle = 45, hjust=1),
         axis.title.y = element_text(size = 12),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
+        #panel.grid.minor = element_blank(),
+        #panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
         legend.text = element_text(size = 8),
         legend.title = element_blank(),
-        axis.title.x = element_blank()
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5)
         ) +
-  labs(y = "cognición-emocionalidad") 
+  labs(y = "emocionalidad/cognición") 
 
 plot_topicos
 
@@ -563,7 +555,7 @@ plot_topicos
 
 ## Según posición política
 
-```{r grafico polo topico}
+```{r grafico polo topico, fig.height=4.5}
 
 # Gráfico
 polo_topico <-  topics %>% 
@@ -574,28 +566,26 @@ polo_topico <-  topics %>%
   mutate(topic = fct_relevel(topic, orden_topicos)) %>% 
   ggplot(aes(x =  topic, y = media, color = polo)) +
   geom_point() +
+  labs(title = "Promedio del indicador de emocionalidad, según tópico y posición política") +
   theme_bw() +
   theme(axis.text.x = element_text( size = 12, angle = 45, hjust=1),
         axis.text.y = element_text(size = 10),
         axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
+        #panel.grid.minor = element_blank(),
+        #panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
         legend.text = element_text(size = 12),
         legend.title = element_blank(),
       
   ) +
-  labs(y = "cognición-emocionalidad") 
+  labs(y = "emocionalidad/cognición") 
 
 polo_topico
 ```
-
 :::
 
-
-## Posicionamiento y emotividad
-
+## Posicionamiento ideológico y emotividad
 
 ```{r plot nominate score}
 
@@ -615,69 +605,106 @@ bins <- nominate %>%
 plot_nominate_score <- bins %>% 
   ggplot(aes(x = bin, y = score, group = 1)) +
   geom_line() +
-  labs(y = "cognición-emocionalidad",
-       x = "WNOMINATE"
+  geom_point() +  
+  labs(y = "emocionalidad/cognición",
+       x = "izquierda a derecha WNOMINATE"
        ) +
   theme_bw() +
   theme(
-        axis.text.x = element_text(size = 12, angle = 90),
+        axis.text.x = element_text(size = 12, angle = 60, vjust = 1, hjust=1),
         axis.text.y = element_text(size = 10),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
+        #panel.grid.minor = element_blank(),
+        #panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
         legend.text = element_text(size = 8),
         legend.title = element_blank(),
+        axis.title.x = element_text(size = 16)
+        
         
   )
 
 plot_nominate_score
 ```
 
-
 # Resultados
 
 ## Modelo sin NOMINATE
 
+
+:::: {.columns}
+
+::: {.column width="50%"}
 ![](images/regresion-sin-nominate.png){fig-align="center" width="466px" height="800px"}
+:::
+
+::: {.column width="50%"}
+
+- Emocionalidad estandarizada
+
+- Categorías de referencia: hombre, diputado, educación, derecha y predictadura.
+
+- Errores *clusterizados* a nivel de político
+
+- 90%, 95% y 99% de confianza.
+
+:::
+
+::::
+
+
+
+
+
 
 
 ## Modelo con NOMINATE
 
-![](images/regresion-con-nominate.png){fig-align="center" width="466px" height="800px"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](images/regresion-con-nominate.png){fig-align="center" width="380px" height="550px"}
+
+:::
+
+::: {.column width="50%"}
+
+- Emocionalidad estandarizada
+
+- Categorías de referencia: mujer, educación, derecha
+
+- Errores *clusterizados* a nivel de político
+
+- 90%, 95% y 99% de confianza.
+
+
+:::
+
+::::
 
 ## Comentarios finales
 
 ::: panel-tabset
-
 ## Limitaciones
 
-- Identificación de tópicos debería contemplar más categorías
+-   Identificación de tópicos debería contemplar más categorías
 
-- No se cuenta con votaciones de diputados para todo el periodo
+-   No se cuenta con votaciones de diputados para todo el periodo
 
-- No se cuenta votaciones de senadores
+-   No se cuenta votaciones de senadores
 
-- Se cuenta con pocos datos para el periodo anterior a 1973
+-   Se cuenta con pocos datos para el periodo anterior a 1973
 
 ## Hallazgos
 
-- La polarización ideológica está relacionada con el uso de lenguaje emotivo
+-   La polarización ideológica está relacionada con el uso de lenguaje emotivo
 
-- No se encuentra exactamente la relación en forma de U entre posición ideológica y emotividad, identificada por Gennaro y Ash (2021) 
+-   No se encuentra exactamente la relación en forma de U entre posición ideológica y emotividad, identificada por Gennaro y Ash (2021)
 
-- Los temas legislativos son tratados con diferentes niveles de emotividad
+-   Los temas legislativos son tratados con diferentes niveles de emotividad
 
-- Existe una relación entre los ciclos parlamentarios y la emotividad de las intervenciones
-
-- El proceso político está influido por una dimensión emotiva
-
-## Caminos posibles
-
-- Etiquetar datos y usar un enfoque supervisado
-
-- Probar otros tipos de preprocesamiento de texto
-
-- Actualizar el diccionario LWIC 
+-   Existe una relación entre los ciclos parlamentarios y la emotividad de las intervenciones
 
 ## Datos
 
@@ -686,19 +713,11 @@ Los datos están disponibles en una base de datos mysql
 Se pueden explorar en el siguiente sitio
 
 www.librosycodigo.com
-
-
-
-
 :::
-
-
 
 # ANEXOS
 
-
 ## Preprocesamiento del texto {visibility="uncounted"}
-
 
 ```{r preparacion_descripcion_dataset_reserva}
 dataset_stats = read_csv("../cuadros_tesis/datasets_stats.csv")
@@ -715,7 +734,6 @@ parrafos <- dataset_stats2$`total párrafos`
 media_parrafos_intervencion <- dataset_stats2$`párrafos/intervención`
 media_palabras_intervencion <- dataset_stats2$`palabras/intervención`
 ```
-
 
 ```{r descripcion_dataset_reserva}
 dataset_stats2 %>% 
@@ -742,37 +760,25 @@ preprocesamiento_tabla
 
 ```
 
-
-
-## Palabras en cada polo  {visibility="uncounted"}
-
+## Palabras en cada polo {visibility="uncounted"}
 
 Similitud de cada palabra respecto al polo cognitivo y afectivo
 
-::: {layout-ncol=2}
-
+::: {layout-ncol="2"}
 ![Polo emotivo](images/wordcloud_affective.png)
 
 ![Polo cognitivo](images/wordcloud_cognitive.png)
-
 :::
-
-
-
 
 ## Nubes {visibility="uncounted"}
 
-
-::: {layout-ncol=2}
-
+::: {layout-ncol="2"}
 ![Polo emotivo](images/wordcloud_most_afective_phrases.png)
 
 ![Polo cognitivo](images/wordcloud_most_cognitive_phrases.png)
-
 :::
 
 ## Búsqueda de embeddings {visibility="uncounted"}
-
 
 Buscamos la representación para cada palabra (vector de 100 dimensiones)
 
@@ -808,5 +814,12 @@ polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
 
 *An emotional speaker always makes his audience feel with him, even when there is nothing in his arguments; which is why many speakers try to overwhelm their audience by mere noise*
 
-- Aristóteles, La Retórica
+-   Aristóteles, La Retórica
 
+## Caminos posibles
+
+-   Etiquetar datos y usar un enfoque supervisado
+
+-   Probar otros tipos de preprocesamiento de texto
+
+-   Actualizar el diccionario LWIC
