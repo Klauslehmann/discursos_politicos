@@ -72,9 +72,9 @@ library(readr)
 
 *He aquí el Bukele chileno, el comisario contra las lacras asquerosas que inundan de drogas a nuestros jóvenes, a quienes la izquierda tiene el desparpajo de defender. Su único derecho es podrirse en las cárceles*
 
--   Gaspar Rivas, 2022
+-   Gaspar Rivas (2022)
 
-# ¿Cómo ha evolucionado el discurso parlamentario en Chile? ¿Se ha vuelto más emotivo o más racional? {.center}
+# ¿Cómo ha evolucionado el discurso parlamentario en Chile? <br> ¿Se ha vuelto más emotivo o más racional? {.center}
 
 ## Estudios relacionados
 
@@ -122,9 +122,6 @@ library(readr)
 
 # Fuentes de información
 
-## Discursos parlamentarios
-
-![](images/ejemplo-scraping-1.png){fig-align="center" width="900px" height="455px"}
 
 ## Discursos parlamentarios
 
@@ -132,7 +129,7 @@ library(readr)
 
 ## Intervenciones parlamentarias
 
-Se extrajeron todas las intervenciones entre 1965 y 2021
+Se extrajeron todas las intervenciones entre 1965 y 2022
 
 ```{r descripcion_datos}
   
@@ -180,7 +177,6 @@ ggplotly(plot, tooltip = c("anio", "n")) %>%
   
 ```
 
-. . .
 
 ```{r tabla_pre_post_filtro}
 
@@ -202,13 +198,6 @@ tabla_n_filas
 
 ## Votaciones en Cámara
 
-::: panel-tabset
-## API
-
-![](images/api-camara.png){fig-align="center" width="900px" height="450px"}
-
-## Datos
-
 ```{r votaciones_anio}
 votaciones_anio <- read_feather("../cuadros_tesis/votaciones_anio.feather")
 
@@ -220,8 +209,8 @@ plot_votaciones <- votaciones_anio %>%
        y = "frecuencia"       ) +
   theme_bw() +
   theme(legend.position = "none",
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
+      #panel.grid.minor = element_blank(),
+      #panel.grid.major = element_blank(),
       plot.caption = element_text(hjust = 0),
       axis.text = element_text(size = 12)
       )
@@ -240,7 +229,6 @@ Se obtuvieron `r n_votaciones` votaciones entre 2002 a 2022
 #   config(displayModeBar = F)
 plot_votaciones
 ```
-:::
 
 # Metodología
 
@@ -403,31 +391,41 @@ DT::datatable(frases_afectivas,
 
 ```
 
-## Polo cognitivo
-
-```{r textos cognitivos}
-
-frases_cognitivas <- read_feather("tablas/textos_cognitivos.feather")
-
-
-DT::datatable(frases_cognitivas, 
-              rownames = FALSE,
-              options = list(
-                 headerCallback = JS(
-              "function(thead, data, start, end, display){",
-              "  $(thead).remove();",
-              "}"),
-              dom = "p"
-              )
-              ) %>% 
-      DT::formatStyle(columns = c(1), fontSize = '50%')
-
-
-```
-
 ## scatter plot
 
+
+
+```{r, fig.width=14, fig.height=6.2}
+polarity_scatter =  read_csv("../cuadros_tesis/scatter_example_polarity.csv")
+
+polarity_scatter_plot <-  polarity_scatter %>% 
+  group_by(polo) %>% 
+  slice(1:5000) %>% 
+  ungroup() %>% 
+  mutate(polo = if_else(polo == "afectivo", "emotivo", polo)) %>% 
+  ggplot(aes(x = d1, y = d2, color = polo )) +
+  geom_point(size = 1.5) +
+  labs(title = "5.000 párrafos más emotivos y cognitivos") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 14),
+        legend.title = element_blank(),
+        text = element_text(size = 10),
+        plot.caption = element_text(hjust = 0, size = 12),
+        axis.title = element_text(size = 14),
+        legend.text=element_text(size=16),
+        plot.title = element_text(hjust = 0.5, size = 18)
+        ) 
+polarity_scatter_plot
+```
+
+<!--
 ![1.000 textos más cognitivos y emotivos](images/polarity_scatter_plot.png){fig-align="center" width="600px" height="400px"}
+
+-->
+
+
 :::
 
 ## Polarización con WNOMINATE
@@ -641,7 +639,7 @@ plot_nominate_score
 
 - Emocionalidad estandarizada
 
-- Categorías de referencia: hombre, diputado, educación, derecha y predictadura.
+- Categorías base: hombre, diputado, educación, derecha y predictadura.
 
 - Errores *clusterizados* a nivel de político
 
@@ -672,7 +670,7 @@ plot_nominate_score
 
 - Emocionalidad estandarizada
 
-- Categorías de referencia: mujer, educación, derecha
+- Categorías base: hombre, educación, derecha
 
 - Errores *clusterizados* a nivel de político
 
@@ -712,7 +710,8 @@ Los datos están disponibles en una base de datos mysql
 
 Se pueden explorar en el siguiente sitio
 
-www.librosycodigo.com
+[www.librosycodigo.com](www.librosycodigo.com)
+
 :::
 
 # ANEXOS
@@ -823,3 +822,31 @@ polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
 -   Probar otros tipos de preprocesamiento de texto
 
 -   Actualizar el diccionario LWIC
+
+
+## Discursos parlamentarios
+
+![](images/ejemplo-scraping-1.png){fig-align="center" width="900px" height="455px"}
+
+## Polo cognitivo
+
+```{r textos cognitivos}
+
+frases_cognitivas <- read_feather("tablas/textos_cognitivos.feather")
+
+
+DT::datatable(frases_cognitivas, 
+              rownames = FALSE,
+              options = list(
+                 headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}"),
+              dom = "p"
+              )
+              ) %>% 
+      DT::formatStyle(columns = c(1), fontSize = '50%')
+
+
+```
+
