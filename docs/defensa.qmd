@@ -70,7 +70,7 @@ library(readr)
 
 ## Motivación
 
-*He aquí el Bukele chileno, el comisario contra las lacras asquerosas que inundan de drogas a nuestros jóvenes, a quienes la izquierda tiene el desparpajo de defender. Su único derecho es podrirse en las cárceles*
+*He aquí el Bukele chileno, el comisario contra las lacras asquerosas que inundan de drogas a nuestros jóvenes [...] Su único derecho es podrirse en las cárceles*
 
 -   Gaspar Rivas (2022)
 
@@ -163,17 +163,22 @@ plot <-  intervenciones_anio %>%
   geom_vline(xintercept = 1990, linetype="dotted") +
   theme_bw() +
   labs(y = "número intervenciones", 
-       x = "año"
+       x = "año",
+       title = "Número de intervenciones por año"
+       
        ) +
   theme(legend.position = "none",
         #panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
-        axis.text = element_text(size = 12)
+        axis.text = element_text(size = 12),
+        plot.title = element_text(hjust = 0.5)
         )
 
-ggplotly(plot, tooltip = c("anio", "n")) %>% 
-   config(displayModeBar = F)
+plot
+
+#ggplotly(plot, tooltip = c("anio", "n")) %>% 
+#   config(displayModeBar = F)
   
 ```
 
@@ -206,13 +211,15 @@ plot_votaciones <- votaciones_anio %>%
   ggplot(aes(x = year, y = n, color = "coral")) +
   geom_line() +
   labs(x = "año",
-       y = "frecuencia"       ) +
+       y = "frecuencia",
+       title = "Número de votaciones por año") +
   theme_bw() +
   theme(legend.position = "none",
       #panel.grid.minor = element_blank(),
       #panel.grid.major = element_blank(),
       plot.caption = element_text(hjust = 0),
-      axis.text = element_text(size = 12)
+      axis.text = element_text(size = 12),
+      plot.title = element_text(hjust = 0.5)
       )
 
 n_votaciones <- sum(votaciones_anio$n) %>% 
@@ -341,7 +348,6 @@ $$
 Y_i = \frac{sim(d_i, E) + b}{sim(d_i, C) + b}
 $$ Entre mayor sea $Y_i$, más sesgo hacia el polo emotivo
 
-## Textos emotivos y cognitivos
 
 ```{r seleccion textos, eval=FALSE}
 scores <- fread("../../data/score_filtered.csv", select = c("score", "cos_affect", "cos_cognitive", "text") )
@@ -368,28 +374,6 @@ write_feather(frases_afectivas, "tablas/textos_afectivos.feather")
 
 ```
 
-::: panel-tabset
-## Polo emotivo
-
-```{r textos emotivos}
-
-frases_afectivas <- read_feather("tablas/textos_afectivos.feather")
-
-DT::datatable(frases_afectivas, 
-              rownames = FALSE,
-              options = list(
-                 headerCallback = JS(
-              "function(thead, data, start, end, display){",
-              "  $(thead).remove();",
-              "}"),
-              dom = "p",
-              displayStart = 2
-              )
-            ) %>% 
-    DT::formatStyle(columns = c(1), fontSize = '50%')
-
-
-```
 
 ## scatter plot
 
@@ -426,7 +410,6 @@ polarity_scatter_plot
 -->
 
 
-:::
 
 ## Polarización con WNOMINATE
 
@@ -466,7 +449,7 @@ p_nominate
 
 ## Emocionalidad a lo largo del tiempo
 
-```{r score cámaras}
+```{r score cámaras, fig.width=12}
 score_senado <- arrow::read_feather("../cuadros_tesis/tabla_timeline_senadores.feather")
 score_diputado <- arrow::read_feather("../cuadros_tesis/tabla_timeline_diputados.feather")
 
@@ -494,19 +477,21 @@ plot_timeline_camaras <- ambas_camaras  %>%
   geom_vline(xintercept = as.Date( "2014-04-01"), linetype = "dotted", color = "black") + 
   geom_vline(xintercept = as.Date( "2018-04-01"), linetype = "dotted", color = "black") + 
   geom_vline(xintercept = as.Date( "2022-04-01"), linetype = "dotted", color = "black") +
-  labs(x = "fecha", y = "emotividad/cognición") +
+  labs(x = "fecha", y = "emotividad/cognición", title = "Promedio de emocionalidad para cada mes") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, size = 10),
+  theme(axis.text.x = element_text(angle = 90, size = 12),
         axis.text.y = element_text(size = 10),
         axis.title = element_text(size = 12),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         plot.caption = element_text(hjust = 0),
+        plot.title = element_text(hjust = 0.5),
         legend.text = element_text(size = 12),
         legend.title = element_blank()
   )
 
-ggplotly(plot_timeline_camaras, tooltip = c("x")) 
+#ggplotly(plot_timeline_camaras, tooltip = c("x")) 
+plot_timeline_camaras
 ```
 
 ## Tópicos
@@ -572,6 +557,7 @@ polo_topico <-  topics %>%
         axis.title.x = element_blank(),
         #panel.grid.minor = element_blank(),
         #panel.grid.major = element_blank(),
+        plot.title = element_text(hjust = 0.5),
         plot.caption = element_text(hjust = 0),
         legend.text = element_text(size = 12),
         legend.title = element_blank(),
@@ -710,7 +696,10 @@ Los datos están disponibles en una base de datos mysql
 
 Se pueden explorar en el siguiente sitio
 
-[www.librosycodigo.com](www.librosycodigo.com)
+[Aplicación](http://www.librosycodigo.com)
+
+
+[Aplicación](https://www.google.com/)
 
 :::
 
@@ -828,7 +817,7 @@ polo_cognitivo = map2_dbl(reflexionar, argumento, ~mean(.x, .y)  )
 
 ![](images/ejemplo-scraping-1.png){fig-align="center" width="900px" height="455px"}
 
-## Polo cognitivo
+<!-- ## Polo cognitivo -->
 
 ```{r textos cognitivos}
 
@@ -850,3 +839,24 @@ DT::datatable(frases_cognitivas,
 
 ```
 
+## Polo emotivo
+
+```{r textos emotivos}
+
+frases_afectivas <- read_feather("tablas/textos_afectivos.feather")
+
+DT::datatable(frases_afectivas, 
+              rownames = FALSE,
+              options = list(
+                 headerCallback = JS(
+              "function(thead, data, start, end, display){",
+              "  $(thead).remove();",
+              "}"),
+              dom = "p",
+              displayStart = 2
+              )
+            ) %>% 
+    DT::formatStyle(columns = c(1), fontSize = '50%')
+
+
+```
