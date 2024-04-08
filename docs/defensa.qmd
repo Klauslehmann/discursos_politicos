@@ -696,7 +696,7 @@ Los datos están disponibles en una base de datos mysql
 
 Se pueden explorar en el siguiente sitio
 
-[Aplicación](http://www.librosycodigo.com)
+[http://www.librosycodigo.com](http://www.librosycodigo.com)
 
 :::
 
